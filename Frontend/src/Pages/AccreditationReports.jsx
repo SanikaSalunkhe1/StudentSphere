@@ -86,11 +86,6 @@ export default function AccreditationReports() {
           >
             <option value="">All Branches</option>
             <option value="Computer">Computer</option>
-            <option value="IT">IT</option>
-            <option value="AIDS">AIDS</option>
-            <option value="Civil">Civil</option>
-            <option value="Chemical">Chemical</option>
-            <option value="Mechanical">Mechanical</option>
           </select>
         </div>
         <button 
