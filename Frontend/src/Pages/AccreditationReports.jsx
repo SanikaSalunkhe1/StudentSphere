@@ -39,8 +39,21 @@ export default function AccreditationReports() {
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pageHeight = pdf.internal.pageSize.getHeight();
       
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      let heightLeft = pdfHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+      }
+
       pdf.save(`Accreditation_Report_${branch || "All"}_${year || "All"}.pdf`);
       toast.success("PDF Generated Successfully!");
     } catch (error) {
@@ -54,19 +67,19 @@ export default function AccreditationReports() {
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
   return (
-    <div className="p-6 bg-slate-50 min-h-screen">
+    <div className="p-6 bg-slate-50 min-h-screen font-serif">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">NAAC/NBA Accreditation Reports</h1>
+        <h1 className="text-2xl font-bold font-sans">NAAC/NBA Accreditation Reports</h1>
         <button 
           onClick={generatePDF} 
           disabled={exporting || !data}
-          className="bg-blue-600 text-white px-4 py-2 rounded shadow disabled:opacity-50 hover:bg-blue-700 transition"
+          className="bg-blue-600 text-white px-4 py-2 rounded shadow disabled:opacity-50 hover:bg-blue-700 transition font-sans"
         >
           {exporting ? "Generating..." : "Download as PDF"}
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded shadow flex gap-4 items-end mb-6">
+      <div className="bg-white p-4 rounded shadow flex gap-4 items-end mb-6 font-sans">
         <div>
           <label className="block text-sm font-bold text-slate-700">Academic Year</label>
           <input 
@@ -98,104 +111,192 @@ export default function AccreditationReports() {
       </div>
 
       {data && (
-        <div id="report-content" className="bg-white p-8 shadow rounded border border-gray-100" style={{ minHeight: '800px' }}>
-          <div className="text-center mb-8 border-b pb-6">
-            <h2 className="text-3xl font-bold uppercase tracking-wider text-slate-800">Institutional Accreditation Report</h2>
-            <p className="text-gray-500 mt-2 font-medium">Filter Criteria: Year - {year || "All"}, Branch - {branch || "All"}</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div className="p-6 bg-slate-50 border rounded-xl shadow-sm hover:shadow-md transition">
-              <h3 className="font-bold text-xl border-b pb-3 mb-4 text-blue-700">1. Placements Summary</h3>
-              <div className="space-y-3 font-medium text-slate-700">
-                <p className="flex justify-between"><span>Total Students Placed:</span> <span className="text-lg font-bold">{data.placements.stats.totalPlaced}</span></p>
-                <p className="flex justify-between"><span>Highest Package:</span> <span className="text-lg font-bold text-green-600">{data.placements.stats.maxPackage || 0} LPA</span></p>
-                <p className="flex justify-between"><span>Average Package:</span> <span className="text-lg font-bold text-indigo-600">{data.placements.stats.avgPackage ? data.placements.stats.avgPackage.toFixed(2) : 0} LPA</span></p>
-              </div>
+        <div id="report-content" className="bg-white text-black p-10 max-w-4xl mx-auto shadow-lg" style={{ minHeight: '1122px', fontSize: '12pt', lineHeight: '1.5' }}>
+          
+          {/* TITLE PAGE */}
+          <div className="text-center mb-16 border-b-4 border-black pb-8">
+            <h4 className="text-lg font-bold mb-1 uppercase tracking-wide">Nagar Yuwak Shikshan Santha, Airoli’s</h4>
+            <h1 className="text-3xl font-extrabold text-red-900 mb-2 uppercase tracking-wider font-sans">Datta Meghe College of Engineering</h1>
+            <p className="text-sm font-semibold mb-2">(Recognized by AICTE, DTE, Govt of Maharashtra & Affiliated To University of Mumbai)</p>
+            <p className="text-sm font-bold mb-6 text-blue-900">NAAC (Cycle 2) ‘A’ Grade Accredited, NBA accredited (Chemical Engg. & Civil Engg.)</p>
+            
+            <div className="my-10">
+              <h2 className="text-2xl font-bold uppercase underline decoration-2 underline-offset-4">Institutional Accreditation Report</h2>
+              <h3 className="text-xl font-bold mt-4 tracking-wide text-gray-800">CSI CATT {year || "2025-26"}</h3>
             </div>
             
-            <div className="p-6 bg-slate-50 border rounded-xl shadow-sm hover:shadow-md transition">
-              <h3 className="font-bold text-xl border-b pb-3 mb-4 text-emerald-700">2. Internships Summary</h3>
-              <div className="space-y-3 font-medium text-slate-700">
-                <p className="flex justify-between"><span>Total Internships:</span> <span className="text-lg font-bold">{data.internships.totalInternships}</span></p>
-                <p className="flex justify-between"><span>Paid Internships:</span> <span className="text-lg font-bold text-green-600">{data.internships.paidCount}</span></p>
-                <p className="flex justify-between"><span>Unpaid Internships:</span> <span className="text-lg font-bold text-orange-600">{data.internships.unpaidCount}</span></p>
-              </div>
+            <div className="mt-8 text-lg font-semibold text-gray-700">
+              <p>Prepared for: NAAC / NBA Evaluators</p>
+              <p className="mt-2">Department: {branch ? branch + " Engineering" : "All Departments"}</p>
+              <p className="mt-2">Date of Report: {new Date().toLocaleDateString()}</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div className="border rounded-xl p-4 shadow-sm">
-              <h3 className="font-bold mb-4 text-center text-lg text-slate-700">Placement by Top Companies</h3>
-              <div className="flex justify-center flex-col items-center overflow-x-auto">
-                {data.placements.topCompanies.length > 0 ? (
-                    <BarChart width={350} height={300} data={data.placements.topCompanies}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="_id" tick={{fontSize: 12}} />
-                    <YAxis />
-                    <Tooltip cursor={{fill: 'transparent'}} />
-                    <Bar dataKey="count" fill="#3b82f6" name="Students Placed" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                ) : (
-                    <div className="h-[300px] flex items-center justify-center text-slate-400">No Placement Data available</div>
-                )}
-              </div>
-            </div>
-
-            <div className="border rounded-xl p-4 shadow-sm">
-              <h3 className="font-bold mb-4 text-center text-lg text-slate-700">Achievements by Category</h3>
-              <div className="flex justify-center">
-                {data.achievements.byCategory.length > 0 ? (
-                  <PieChart width={350} height={300}>
-                    <Pie
-                      data={data.achievements.byCategory}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      innerRadius={40}
-                      fill="#8884d8"
-                      dataKey="count"
-                      nameKey="_id"
-                      label
-                    >
-                      {data.achievements.byCategory.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend verticalAlign="bottom" height={36}/>
-                  </PieChart>
-                ) : (
-                  <div className="h-[300px] flex items-center justify-center text-slate-400">No Achievement Data available</div>
-                )}
-              </div>
-            </div>
+          {/* INTRODUCTION */}
+          <div className="mb-10 text-justify">
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">1. Introduction</h3>
+            <p>
+              This report provides a comprehensive summary of student performance, career growth, and academic achievements for the specified academic period. Designed to meet the stringent guidelines of NAAC and NBA accreditation processes, the document highlights criterion-wise statistical data pertaining to student demographics, placement successes, internship participations, and overarching achievements. The data presented herein forms a crucial component of the institution's continuous quality improvement and evaluation cycle.
+            </p>
           </div>
 
-          <div className="mt-8 border rounded-xl p-6 shadow-sm">
-             <h3 className="font-bold text-xl border-b pb-3 mb-6 text-purple-700">3. Student Demographics</h3>
-             <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-slate-200">
+          {/* CRITERION 1: DEMOGRAPHICS */}
+          <div className="mb-10 page-break-inside-avoid">
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">2. Criterion 1: Student Demographics</h3>
+            <p className="mb-4">
+              The following table summarizes the enrollment and diversity of students within the department. This demographic analysis plays a pivotal role in understanding the reach and inclusive educational environment provided.
+            </p>
+            <table className="w-full border-collapse border border-black text-center text-sm mb-4 page-break-inside-avoid">
                 <thead>
-                    <tr className="bg-slate-100 text-slate-700">
-                    <th className="py-3 px-6 border-b text-left font-bold uppercase text-sm tracking-wider">Category</th>
-                    <th className="py-3 px-6 border-b text-left font-bold uppercase text-sm tracking-wider">Count</th>
+                    <tr className="bg-gray-200 uppercase text-xs font-bold font-sans">
+                        <th className="border border-black p-2">Category</th>
+                        <th className="border border-black p-2">Total Students Count</th>
                     </tr>
                 </thead>
-                <tbody className="text-slate-700">
+                <tbody>
                     {data.demographics.categories.map((c, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-6 border-b font-medium">{c._id || "Unspecified"}</td>
-                        <td className="py-3 px-6 border-b bg-slate-50/50 font-bold">{c.count}</td>
+                    <tr key={idx}>
+                        <td className="border border-black p-2 font-semibold font-sans">{c._id || "Unspecified"}</td>
+                        <td className="border border-black p-2">{c.count}</td>
                     </tr>
                     ))}
-                    <tr className="bg-blue-50 font-bold border-t-2 border-slate-300 text-blue-900">
-                    <td className="py-4 px-6 border-b uppercase">Total Students</td>
-                    <td className="py-4 px-6 border-b text-lg">{data.demographics.total}</td>
+                    <tr className="bg-gray-100 font-bold">
+                        <td className="border border-black p-2 uppercase text-right pr-4 font-sans">Overall Strength</td>
+                        <td className="border border-black p-2 text-lg">{data.demographics.total}</td>
                     </tr>
                 </tbody>
-                </table>
-             </div>
+            </table>
+            <p className="text-sm italic text-gray-600 mt-2">Observation: The demographic distribution illustrates the overall admitted capacity of the evaluated batches.</p>
+          </div>
+
+          {/* CRITERION 2: PLACEMENTS */}
+          <div className="mb-10">
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">3. Criterion 2: Placements & Career Growth</h3>
+            <p className="mb-4">
+              A key indicator of academic excellence and industry readiness is the placement record. This section outlines the employment statistics and salary structures achieved by the graduating cohorts.
+            </p>
+            <div className="flex gap-4 justify-between mb-6 page-break-inside-avoid">
+               <div className="border border-black p-4 w-1/3 bg-gray-50 text-center">
+                  <div className="text-xs font-bold uppercase mb-1">Total Placed</div>
+                  <div className="text-2xl font-bold text-blue-900">{data.placements.stats.totalPlaced}</div>
+               </div>
+               <div className="border border-black p-4 w-1/3 bg-gray-50 text-center">
+                  <div className="text-xs font-bold uppercase mb-1">Highest Package</div>
+                  <div className="text-2xl font-bold text-green-700">{data.placements.stats.maxPackage || 0} LPA</div>
+               </div>
+               <div className="border border-black p-4 w-1/3 bg-gray-50 text-center">
+                  <div className="text-xs font-bold uppercase mb-1">Average Package</div>
+                  <div className="text-2xl font-bold text-purple-700">{data.placements.stats.avgPackage ? data.placements.stats.avgPackage.toFixed(2) : 0} LPA</div>
+               </div>
+            </div>
+
+            <div className="my-6 text-center page-break-inside-avoid flex flex-col items-center">
+              <h4 className="font-bold underline mb-4">Figure 3.1: Top Recruiting Companies</h4>
+              {data.placements.topCompanies.length > 0 ? (
+                  <BarChart width={500} height={300} data={data.placements.topCompanies} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="_id" tick={{fontSize: 12, fill: '#000'}} stroke="#000" />
+                  <YAxis tick={{fill: '#000'}} stroke="#000" />
+                  <Tooltip wrapperClassName="font-sans text-sm" />
+                  <Bar dataKey="count" fill="#3b82f6" name="Students Placed" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+              ) : (
+                  <div className="h-[300px] flex items-center justify-center border border-gray-300 w-full text-gray-500 font-sans">No Placement Data Available</div>
+              )}
+            </div>
+            
+            <p className="text-justify text-sm">
+               <strong>Analysis:</strong> The placement trends indicate strong industry confidence in the institution's curriculum and the technical proficiency of its graduates. The diversity of recruiting companies underscores the broad applicability of the skills acquired by students.
+            </p>
+          </div>
+
+          {/* CRITERION 3: INTERNSHIPS */}
+          <div className="mb-10 page-break-inside-avoid">
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">4. Criterion 3: Internships and Practical Exposure</h3>
+            <p className="mb-4 text-justify">
+              Internships bridge the gap between theoretical knowledge and practical application. The table below represents student engagement in industry internships, differentiating between remunerated and non-remunerated opportunities.
+            </p>
+            <table className="w-full border-collapse border border-black text-center text-sm mb-4">
+                <thead>
+                    <tr className="bg-gray-200 uppercase text-xs font-bold font-sans">
+                        <th className="border border-black p-2">Internship Type</th>
+                        <th className="border border-black p-2">Total Undertaken</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td className="border border-black p-2 font-semibold font-sans">Paid Internships</td>
+                        <td className="border border-black p-2">{data.internships.paidCount}</td>
+                    </tr>
+                    <tr>
+                        <td className="border border-black p-2 font-semibold font-sans">Unpaid Internships</td>
+                        <td className="border border-black p-2">{data.internships.unpaidCount}</td>
+                    </tr>
+                    <tr className="bg-gray-100 font-bold">
+                        <td className="border border-black p-2 text-right pr-4 uppercase font-sans">Total Internships</td>
+                        <td className="border border-black p-2 text-lg">{data.internships.totalInternships}</td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+
+          {/* CRITERION 4: ACHIEVEMENTS */}
+          <div className="mb-10 page-break-inside-avoid">
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">5. Criterion 4: Student Achievements & Co-Curriculars</h3>
+            <p className="mb-4 text-justify">
+              In addition to academic prowess, students exhibited commendable participation and success in various co-curricular and extracurricular domains, contributing effectively to their holistic development.
+            </p>
+            
+            <div className="flex justify-center my-6 flex-col items-center">
+               <h4 className="font-bold underline mb-4">Figure 5.1: Achievement Categorization</h4>
+              {data.achievements.byCategory.length > 0 ? (
+                <PieChart width={500} height={300}>
+                  <Pie
+                    data={data.achievements.byCategory}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    innerRadius={40}
+                    fill="#8884d8"
+                    dataKey="count"
+                    nameKey="_id"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={true}
+                  >
+                    {data.achievements.byCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip wrapperClassName="font-sans text-sm"/>
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{fontFamily: 'sans-serif', fontSize: '12px'}}/>
+                </PieChart>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center border border-gray-300 w-full text-gray-500 font-sans">No Achievement Data Available</div>
+              )}
+            </div>
+          </div>
+
+          {/* CONCLUSION */}
+          <div className="mb-10 page-break-inside-avoid">
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">6. Conclusions & Observations</h3>
+            <p className="text-justify mb-4">
+              Upon thorough review of the data spanning criterion areas (Demographics, Placements, Internships, and Achievements), the overall continuous improvement trajectory is clearly evident. The robust placement metrics reflect excellent teaching-learning methodologies and active industry partnerships. A high rate of internship participation highlights a curriculum responsive to practical and modern engineering challenges.
+            </p>
+            <p className="text-justify">
+              <strong>Future Action Items:</strong> Focus on increasing the ratio of paid to unpaid internships, widening the placement net to include a broader diversity of core sector jobs, and further encouraging student participation in national and international technical symposiums.
+            </p>
+          </div>
+
+          {/* SIGNATURES */}
+          <div className="mt-20 flex justify-between px-10 pt-10 border-t border-gray-400 font-bold page-break-inside-avoid">
+              <div className="text-center">
+                  <div className="mb-10">___________________________</div>
+                  <div>Head of Department</div>
+              </div>
+              <div className="text-center">
+                  <div className="mb-10">___________________________</div>
+                  <div>Principal</div>
+              </div>
           </div>
 
         </div>
