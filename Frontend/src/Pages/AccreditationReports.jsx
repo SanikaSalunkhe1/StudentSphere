@@ -3,7 +3,7 @@ import { reportService } from "../services/reportService";
 import { toast } from "react-toastify";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from "recharts";
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+import { toCanvas } from "html-to-image";
 
 export default function AccreditationReports() {
   const [data, setData] = useState(null);
@@ -31,10 +31,26 @@ export default function AccreditationReports() {
     try {
       setExporting(true);
       toast.info("Generating PDF, please wait...");
+      
+      // Temporarily scroll to top to ensure html2canvas captures everything correctly
+      const originalScrollTop = window.scrollY || document.documentElement.scrollTop;
+      window.scrollTo(0, 0);
+      
       const input = document.getElementById("report-content");
       
-      const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+      // small delay to let scroll to top take effect and any UI to settle
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const canvas = await toCanvas(input, { 
+        pixelRatio: 2,
+        width: input.offsetWidth,
+        height: input.offsetHeight,
+        style: { margin: '0' }
+      });
       const imgData = canvas.toDataURL("image/png");
+      
+      // Restore scroll position
+      window.scrollTo(0, originalScrollTop);
       
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -198,7 +214,7 @@ export default function AccreditationReports() {
                   <XAxis dataKey="_id" tick={{fontSize: 12, fill: '#000'}} stroke="#000" />
                   <YAxis tick={{fill: '#000'}} stroke="#000" />
                   <Tooltip wrapperClassName="font-sans text-sm" />
-                  <Bar dataKey="count" fill="#3b82f6" name="Students Placed" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="count" fill="#3b82f6" name="Students Placed" radius={[2, 2, 0, 0]} isAnimationActive={false} />
                   </BarChart>
               ) : (
                   <div className="h-[300px] flex items-center justify-center border border-gray-300 w-full text-gray-500 font-sans">No Placement Data Available</div>
@@ -262,6 +278,7 @@ export default function AccreditationReports() {
                     nameKey="_id"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     labelLine={true}
+                    isAnimationActive={false}
                   >
                     {data.achievements.byCategory.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
