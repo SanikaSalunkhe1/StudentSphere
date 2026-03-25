@@ -367,7 +367,10 @@ const getAdmissionsValidation = Joi.object({
     .optional()
     .messages({
       "boolean.base": "Migration certificate must be true or false."
-    })
+    }),
+
+  export: Joi.string().valid("true", "false").optional()
+
 }).options({
   stripUnknown: true,
   convert: true,
