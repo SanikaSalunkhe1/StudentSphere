@@ -3,6 +3,7 @@ import { dashboardService } from "../services/dashboardService";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalActivities: 0,
@@ -15,6 +16,8 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [placementByType, setPlacementByType] = useState([]);
   const [achievementByCategory, setAchievementByCategory] = useState([]);
+  const [activityByType, setActivityByType] = useState([]);
+  const [internshipByType, setInternshipByType] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -23,19 +26,27 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const role = localStorage.getItem("role");
+      setError(null);
+      const role = localStorage.getItem("role") || "";
+      const lowerRole = role.toLowerCase();
       let data;
 
-      if (role === "admin") {
+      if (lowerRole === "admin") {
         data = await dashboardService.getAdminDashboard();
-      } else if (role === "division" || role === "divisionIncharge") {
+      } else if (lowerRole === "division" || lowerRole === "divisionincharge") {
         data = await dashboardService.getDivisionDashboard();
+      }
+
+      if (!data) {
+        throw new Error("No data returned for role: " + role);
       }
 
       if (data && data.stats) {
         setStats(data.stats);
         setPlacementByType(data.placementsByType || []);
         setAchievementByCategory(data.achievementsByCategory || []);
+        setActivityByType(data.activitiesByType || []);
+        setInternshipByType(data.internshipsByType || []);
 
         // Map recentAchievements to recentActivities format
         if (data.recentAchievements) {
@@ -52,13 +63,28 @@ export default function AdminDashboard() {
         } else {
           setRecentActivities([]);
         }
+      } else {
+        throw new Error("Data format is incorrect. Stats object missing.");
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      setError(error?.response?.data?.message || error.message || "Failed to fetch dashboard data");
     } finally {
       setLoading(false);
     }
   };
+
+  if (error) {
+    return (
+      <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen flex items-center justify-center">
+        <div className="bg-red-50 text-red-600 border border-red-200 p-6 rounded-lg text-center max-w-lg shadow-sm">
+          <svg className="w-10 h-10 text-red-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <h2 className="text-xl font-bold mb-2">Error Loading Dashboard</h2>
+          <p className="text-sm">{error}</p>
+        </div>
+      </main>
+    );
+  }
 
   if (loading) {
     return (
@@ -223,6 +249,59 @@ export default function AdminDashboard() {
               ))
             ) : (
               <p className="text-slate-500 text-sm">No achievement data available.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Second Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Activity Distribution */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Activities by Type</h3>
+          <div className="space-y-4">
+            {activityByType.length > 0 ? (
+              activityByType.map((item) => (
+                <div key={item._id}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium text-slate-700">{item._id || "Other"}</span>
+                    <span className="text-sm font-bold text-amber-600">{item.count}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5">
+                    <div
+                      className="bg-amber-600 h-2.5 rounded-full transition-all duration-500"
+                      style={{ width: `${(item.count / Math.max(...activityByType.map(a => a.count))) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-slate-500 text-sm">No activity data available.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Internship Distribution */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Internships Status</h3>
+          <div className="space-y-4">
+            {internshipByType.length > 0 ? (
+              internshipByType.map((item) => (
+                <div key={item._id}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium text-slate-700">{item._id || "Other"}</span>
+                    <span className="text-sm font-bold text-purple-600">{item.count}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5">
+                    <div
+                      className="bg-purple-600 h-2.5 rounded-full transition-all duration-500"
+                      style={{ width: `${(item.count / Math.max(...internshipByType.map(i => i.count))) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-slate-500 text-sm">No internship data available.</p>
             )}
           </div>
         </div>
