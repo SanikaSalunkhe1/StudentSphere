@@ -4,6 +4,7 @@ import { dashboardService } from "../services/dashboardService";
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalActivities: 0,
     totalAchievements: 0,
@@ -12,9 +13,10 @@ export default function StudentDashboard() {
     higherStudiesStatus: "Not Applied",
   });
 
-  const [recentActivities, setRecentActivities] = useState([]);
   const [activityDistribution, setActivityDistribution] = useState([]);
   const [achievementDistribution, setAchievementDistribution] = useState([]);
+  const [placementDistribution, setPlacementDistribution] = useState([]);
+  const [internshipDistribution, setInternshipDistribution] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -23,7 +25,12 @@ export default function StudentDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await dashboardService.getStudentDashboard();
+
+      if (!data) {
+        throw new Error("No data returned from backend.");
+      }
 
       if (data && data.stats) {
         setStats({
@@ -34,13 +41,31 @@ export default function StudentDashboard() {
         });
         setActivityDistribution(data.activitiesByType || []);
         setAchievementDistribution(data.achievementsByCategory || []);
+        setPlacementDistribution(data.placementsByType || []);
+        setInternshipDistribution(data.internshipsByType || []);
+        setInternshipDistribution(data.internshipsByType || []);
+      } else {
+        throw new Error("Incorrect data format from backend. 'stats' is missing.");
       }
     } catch (error) {
       console.error("Error fetching student dashboard data:", error);
+      setError(error?.response?.data?.message || error.message || "Failed to fetch dashboard data");
     } finally {
       setLoading(false);
     }
   };
+
+  if (error) {
+    return (
+      <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen flex items-center justify-center">
+        <div className="bg-red-50 text-red-600 border border-red-200 p-6 rounded-lg text-center max-w-lg shadow-sm">
+          <svg className="w-10 h-10 text-red-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <h2 className="text-xl font-bold mb-2">Error Loading Dashboard</h2>
+          <p className="text-sm">{error}</p>
+        </div>
+      </main>
+    );
+  }
 
   if (loading) {
     return (
@@ -316,6 +341,80 @@ export default function StudentDashboard() {
             ) : (
               <p className="text-slate-500 text-xs sm:text-sm">
                 No achievements yet
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Second Charts Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-7 sm:mb-10">
+        {/* Placement Distribution Chart */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
+            Placements by Type
+          </h3>
+          <div className="space-y-3">
+            {placementDistribution.length > 0 ? (
+              (() => {
+                const maxCount = Math.max(...placementDistribution.map(d => d.count)) || 1;
+                return placementDistribution.map((item) => (
+                  <div key={item._id}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs sm:text-sm font-medium text-slate-700">
+                        {item._id || "Other"}
+                      </span>
+                      <span className="text-xs sm:text-sm font-bold text-emerald-600">
+                        {item.count}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-emerald-600 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${(item.count / maxCount) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ));
+              })()
+            ) : (
+              <p className="text-slate-500 text-xs sm:text-sm">
+                No placements yet
+              </p>
+            )}
+          </div>
+        </div>
+        {/* Internship Distribution Chart */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
+            Internships Status
+          </h3>
+          <div className="space-y-3">
+            {internshipDistribution.length > 0 ? (
+              (() => {
+                const maxCount = Math.max(...internshipDistribution.map(d => d.count)) || 1;
+                return internshipDistribution.map((item) => (
+                  <div key={item._id}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs sm:text-sm font-medium text-slate-700">
+                        {item._id || "Other"}
+                      </span>
+                      <span className="text-xs sm:text-sm font-bold text-purple-600">
+                        {item.count}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-purple-600 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${(item.count / maxCount) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ));
+              })()
+            ) : (
+              <p className="text-slate-500 text-xs sm:text-sm">
+                No internships yet
               </p>
             )}
           </div>
