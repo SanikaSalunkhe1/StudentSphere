@@ -30,7 +30,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://student-website-seven.vercel.app", "https://student-website-frontend.vercel.app",
+      "https://student-website-seven.vercel.app", "https://student-website-frontend.vercel.app","https://computer-department-student-sphere.vercel.app",
       process.env.FRONTEND_URL // Support env-based URL
     ].filter(Boolean), // Remove undefined/null if env var is missing
     credentials: true,
