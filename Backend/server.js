@@ -81,6 +81,7 @@ app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 // after all routes
 app.use(errorHandler);
 
+//this comment was added so that a commit can  be amde-  so that deployment can trigger
 
 app.get("/", (req, res) => {
   res.send("API is running...");
