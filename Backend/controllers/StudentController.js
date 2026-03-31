@@ -20,6 +20,8 @@ const sendEmailBrevo = require("../services/sendEmailBrevo");
 const { transformStudent, studentColumnMap } = require('../helpers/excel/exportTransformers');
 const exportToExcel = require('../helpers/excel/exportToExcel');
 
+const errorLogger = require("../helpers/winston/errorLogger")
+
 // for studentPhoto
 const fileConfigs = [
   {
@@ -204,7 +206,7 @@ const importStudentIDs = async (req, res) => {
     });
  
   } catch (error) {
-    console.error("Import StudentIDs Error:", error);
+    errorLogger(error,req, "Import student ids Controller")
     return res.status(500).json({
       success: false,
       message: "Error importing student data"
@@ -755,7 +757,7 @@ const addStudentDetails = async (req, res) => {
       return res.status(400).json({ success: false, message: "This PRN already already exists." });
     }
 
-    console.error("Error in addStudentDetails:", err);
+    errorLogger(err,req, "Add Student Details Controller")
 
     // Rollback uploaded file if DB save fails
     if (!dbSaved && uploadedFiles) {
@@ -910,7 +912,7 @@ const updateStudent = async (req, res) => {
     return res.status(200).json({ success: true, message: "Student updated successfully", data: updatedStudent });
 
   } catch (err) {
-    console.error("Error in updateStudent:", err);
+    errorLogger(err,req, "Update Student Controller")
 
     // Rollback uploaded file if DB save fails
     if (!dbSaved && uploadedFiles) {
@@ -966,7 +968,7 @@ const deleteStudent = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Student deleted successfully" });
   } catch (err) {
-    console.error("Error in deleteStudent:", err);
+    errorLogger(err,req, "Delete Student Controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -1079,7 +1081,7 @@ const getStudents = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('Error in getStudents controller: ', '\ntime = ', new Date().toISOString(), '\nError: ', err);
+        errorLogger(err,req, "Get Students Controller")
         return res.status(500).json({ success: false, message: 'Some Error Occurred. Please Try Again Later.' });
     }
 };
@@ -1210,7 +1212,7 @@ const getSingleStudent = async (req, res) => {
 
     return res.status(200).json({ success: true, data: student });
   } catch (error) {
-    console.error("Error in getSingleStudent:", error);
+    errorLogger(error,req, "Get single Student Controller")
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -1232,7 +1234,7 @@ const getStudentById = async (req, res) => {
 
     return res.status(200).json({ success: true, data: student });
   } catch (error) {
-    console.error("Error in getStudentById : ", error);
+    errorLogger(error,req, "Get Student by id Controller")
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 

@@ -8,7 +8,7 @@ const Student = require("../models/Student.js")
 const Admin = require('../models/Admin.js');
 const sendEmailBrevo = require("../services/sendEmailBrevo");
 const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema , forgotPasswordSchema , resetPasswordSchema , adminResetPasswordSchema , divisionInchargeResetPasswordSchema } = require('../validators/authValidation.js');
-
+const errorLogger = require("../helpers/winston/errorLogger");
 
 
 if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not set");
@@ -66,9 +66,9 @@ exports.signup = async (req, res) => {
     // Send verification email
     const verifyURL = `${process.env.FRONTEND_URL}/verify-email/${rawToken}`;
     const htmlContent = `
-      <h2>Hello ${student.name?.firstName || "Student"},</h2>
-      <p>Thanks for signing up! Please verify your email to activate your account.</p>
-      <p><a href="${verifyURL}" style="padding:10px 20px; background:#4F46E5; color:white; border-radius:5px; text-decoration:none;">Verify Email</a></p>
+      <h2>Hello ${student.name?.firstName || "Student"},</h2>\n\n
+      <p>Thanks for signing up! Please verify your email to activate your account.</p>\n\n
+      <p><a href="${verifyURL}" style="padding:10px 20px; background:#4F46E5; color:white; border-radius:5px; text-decoration:none;">Verify Email</a></p>\n\n\n\n
       <p>This link expires in 10 minutes.</p>
       <p>If you didn't sign up, ignore this email.</p>
     `;
@@ -85,7 +85,7 @@ exports.signup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Signup Error:", error);
+    errorLogger(error,req,"Signup controller");
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
@@ -169,7 +169,7 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Login Error:", error);
+    errorLogger(error,req,"login controller")
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
@@ -209,7 +209,7 @@ exports.verifyEmail = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Verify Email Error:", error);
+    errorLogger(error,req,"Verify email controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -263,7 +263,7 @@ exports.adminLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Admin Login Error:", error);
+    errorLogger(error,req,"Admin Login controller")
     return res.status(500).json({ success: false, message: "Internal Server Error. Please try again later." });
   }
 };
@@ -321,7 +321,7 @@ exports.divisionInchargeLogin = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Division Incharge Login Error:", error);
+    errorLogger(error,req,"Division Incharge Login controller")
     return res.status(500).json({
       success: false,
       message: "Internal Server Error. Please try again later."
@@ -336,7 +336,7 @@ exports.logout = (req, res) => {
     res.clearCookie('token', { httpOnly: true, sameSite: "lax", secure: true });
     return res.status(200).json({ message: 'Logout successful' });
   } catch (err) {
-    console.error("Logout Error:", err);
+    errorLogger(error,req,"Logout controller")
     return res.status(500).json({ success: false, message: "Internal Server Error. Please try again later." });
   }
 };
@@ -416,7 +416,7 @@ exports.forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Forgot Password Error:", error);
+    errorLogger(error,req,"Forgot Password Controller")
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
@@ -488,7 +488,7 @@ exports.resetPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Reset Password Error:", error);
+  errorLogger(error,req,"Reset Password controller")
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
@@ -536,7 +536,7 @@ exports.adminForgotPassword = async (req, res) => {
     return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
 
   } catch (error) {
-    console.error("Admin Forgot Password Error:", error);
+    errorLogger(error,req,"Admin Forgot Password controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -572,7 +572,7 @@ exports.adminResetPassword = async (req, res) => {
     return res.status(200).json({ success: true, message: "Admin password reset successful" });
 
   } catch (error) {
-    console.error("Admin Reset Password Error:", error);
+    errorLogger(error,req,"Admin Reset Password controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -616,7 +616,7 @@ exports.divisionInchargeForgotPassword = async (req, res) => {
     return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
  
   } catch (error) {
-    console.error("Division Incharge Forgot Password Error:", error);
+  errorLogger(error,req,"Division Incharge Forgot Password controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -652,7 +652,7 @@ exports.divisionInchargeResetPassword = async (req, res) => {
     return res.status(200).json({ success: true, message: "Division Incharge password reset successful" });
  
   } catch (error) {
-    console.error("Division Incharge Reset Password Error:", error);
+    errorLogger(error,req,"Division Incharge Reset Password controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };

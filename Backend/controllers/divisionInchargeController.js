@@ -8,7 +8,7 @@ const { importDivisionInchargeSchema, changeDivisionInchargeDetailsSchema, chang
 const sendEmailBrevo = require("../services/sendEmailBrevo");
 
 const generateRandomPassword = require("../helpers/generateRandomPassword");
-
+const errorLogger = require("../helpers/winston/errorLogger");
 
 // Helper to read Excel cell safely
 const getCellValue = (cell) => {
@@ -74,7 +74,7 @@ const addSingleDivisionIncharge = async (req, res) => {
       subject: "Division Incharge Account Created",
       htmlContent: `
         <h2>Hello ${name},</h2>
-        <p>Your Division Incharge account has been created. Please change the password later on</p>
+        <p>Your Division Incharge account has been created. Please change the password later on.</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Password:</b> ${plainPassword}</p>
       `
@@ -87,7 +87,7 @@ const addSingleDivisionIncharge = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Add Division Incharge Error:", error);
+    errorLogger(error,req,"Add Single Division Incharge Controller");
     return res.status(500).json({
       success: false,
       message: "Internal Server Error. Please Try Again Later"
@@ -119,7 +119,7 @@ const getMyProfile = async (req,res)=>{
 		return res.status(200).json({ success: true, data: incharge });
 
 	} catch (error) {
-		console.error("Get Single Error:", error);
+		errorLogger(error,req,"Get My Profile Division Incharge Controller");
 		return res.status(500).json({ success: false, message: "Internal Server Error. Please Try Again Later" });
 	}
 };
@@ -147,7 +147,7 @@ const getSingleDivisionInchargeById = async (req, res) => {
 		return res.status(200).json({ success: true, data: incharge });
 
 	} catch (error) {
-		console.error("Get Single Error:", error);
+		errorLogger(error,req,"Get Single Division Incharge BY Id");
 		return res.status(500).json({ success: false, message: "Internal Server Error. Please Try Again Later" });
 	}
 };
@@ -160,7 +160,7 @@ const getAllDivisionIncharges = async (req, res) => {
       data: incharges
     });
   } catch (error) {
-    console.error("Error fetching division incharges:", error);
+    errorLogger(error,req,"Get all division Incharges");
     return res.status(500).json({
       success: false,
       message: "Internal Server Error. Please Try Again Later"
@@ -233,7 +233,7 @@ const changeDivisionInchargeDetails = async (req, res) => {
       data: incharge,
     });
   } catch (error) {
-    console.error("Update Error:", error);
+    errorLogger(error,req,"Change Division Incharge Details Controller");
     return res.status(500).json({
       success: false,
       message: "Internal Server Error. Please Try Again Later",
@@ -307,7 +307,7 @@ const changeEmailOfDivisionIncharge = async (req, res) => {
       message: "Email changed successfully and new credentials sent",
     });
   } catch (error) {
-    console.error("Change Email Error:", error);
+    errorLogger(error,req,"Change Email Of Division Incharge Controller");
     return res.status(500).json({
       success: false,
       message: "Internal Server Error. Please Try Again Later",
@@ -342,7 +342,7 @@ const deleteDivisionIncharge = async (req, res) => {
       message: "Division Incharge deleted successfully"
     });
   } catch (error) {
-    console.error("Error deleting division incharge:", error);
+    errorLogger(error,req,"Delete Division Incharge Controller");
     return res.status(500).json({
       success: false,
       message: "Internal Server Error. Please Try Again Later."

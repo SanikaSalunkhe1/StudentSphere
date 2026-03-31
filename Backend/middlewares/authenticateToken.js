@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require("../models/Admin");
 const Student = require("../models/Student");
 const DivisionIncharge = require("../models/DivisionIncharge");
+const errorLogger = require('../helpers/winston/errorLogger');
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 
@@ -48,7 +49,7 @@ const authenticateToken = async (req, res, next) => {
 
         next();
     } catch (err) {
-        console.error("Token Verification Error:", err);
+        errorLogger(err, req, "Authenticate Token Middleware")
         return res.status(401).json({ success: false, message: "Invalid or expired token." });
     }
 };

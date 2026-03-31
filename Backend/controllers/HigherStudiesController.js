@@ -10,7 +10,7 @@ const mongoose = require("mongoose");
 const { createHigherStudySchema, updateHigherStudySchema, getHigherStudiesValidation, validateStudentID } = require("../validators/higherStudiesValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformHigherStudy, higherStudyColumnMap } = require('../helpers/excel/exportTransformers');
-
+const errorLogger = require("../helpers/winston/errorLogger")
 
 
 const fileConfigs = [
@@ -117,7 +117,7 @@ const createHigherStudy = async (req, res) => {
 
         return res.status(201).json({ success: true, message: "Higher study record created.", data: higherStudy });
     } catch (err) {
-        console.error("Error in createHigherStudy:", err);
+        errorLogger(err,req,"Create Higher Study Controller");
         if (!dbSaved && uploadedFiles) {
             const publicIds = Object.values(uploadedFiles).map(f => f.publicId);
             await deleteMultipleFromCloudinary(publicIds);
@@ -215,7 +215,7 @@ const updateHigherStudy = async (req, res) => {
         return res.status(200).json({ success: true, message: "Higher study record updated.", data: updatedStudy });
 
     } catch (err) {
-        console.error("Error in updateHigherStudy:", err);
+        errorLogger(err,req,"Update Higher Study Controller");
         if (!dbSaved && newPublicIds.length > 0) await deleteMultipleFromCloudinary(newPublicIds);
         return res.status(500).json({ success: false, message: "Server Error" });
     }
@@ -256,7 +256,7 @@ const getSingleHigherStudy = async (req, res) => {
 
         return res.status(200).json({ success: true, data: higherStudy });
     } catch (err) {
-        console.error("Error in getSingleHigherStudy:", err);
+        errorLogger(err,req,"Get Single Higher Study Controller");
         return res.status(500).json({ success: false, message: "Server Error" });
     }
 };
@@ -426,7 +426,7 @@ const getHigherStudies = async (req, res) => {
         });
 
     } catch (err) {
-        console.error("Error in getHigherStudies:", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        errorLogger(err,req,"Get Higher Study Controller");
         return res.status(500).json({ success: false, message: "Some Error Occurred. Please Try Again Later." });
     }
 };
@@ -529,7 +529,7 @@ const getOwnHigherStudies = async (req, res) => {
         const studies = await HigherStudies.find({ stuID: studentId }).sort({ createdAt: -1 }).lean();
         return res.status(200).json({ success: true, data: studies });
     } catch (err) {
-        console.error("Error in getOwnHigherStudies:", err);
+        errorLogger(err,req,"Get Own Higher Study Controller");
         return res.status(500).json({ success: false, message: "Server Error" });
     }
 };
@@ -552,7 +552,7 @@ const getHigherStudiesByStudent = async (req, res) => {
         const studies = await HigherStudies.find({ stuID: studentId }).sort({ createdAt: -1 }).lean();
         return res.status(200).json({ success: true, data: studies });
     } catch (err) {
-        console.error("Error in getHigherStudiesByStudent:", err);
+        errorLogger(err,req,"Get Higher Study By Student Controller");
         return res.status(500).json({ success: false, message: "Server Error" });
     }
 };
@@ -604,7 +604,7 @@ const deleteHigherStudy = async (req, res) => {
 
         return res.status(200).json({ success: true, message: "Higher study record deleted." });
     } catch (err) {
-        console.error("Error in deleteHigherStudy:", err);
+        errorLogger(err,req,"Delete Higher Study Controller");
         return res.status(500).json({ success: false, message: "Server Error" });
     }
 };

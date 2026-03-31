@@ -8,7 +8,7 @@ const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUpl
 const mongoose= require("mongoose");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformPlacement, placementColumnMap } = require('../helpers/excel/exportTransformers');
-
+const errorLogger = require("../helpers/winston/errorLogger")
 
 const fileConfigs = [
   {
@@ -118,7 +118,7 @@ const createPlacement = async (req, res) => {
 		return res.status(201).json({ success: true, message: "Placement added successfully", placement });
 
 	} catch (err) {
-		console.error("Error in createPlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		errorLogger(err,req, "Create Placement Controller")
        
 		// Rollback cloudinary upload if DB save fails
 		if (!dbSaved && uploadedFiles) {
@@ -269,7 +269,7 @@ const updatePlacement = async (req, res) => {
 		});
 	} catch (err) {
 
-		console.error("Error in updatePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		errorLogger(err,req, "Update Placement Controller")
 
 		// Rollback uploaded file if DB fails
 		if (!dbSaved && uploadedFiles) {
@@ -465,7 +465,7 @@ const getPlacements = async (req, res) => {
 		});
 
 	} catch (err) {
-		console.error("Error in getPlacements controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		errorLogger(err,req, "Get Placements Controller")
 		return res.status(500).json({ success: false, message: "Some Error Occurred. Please Try Again Later." });
 	}
 };
@@ -525,7 +525,7 @@ const deletePlacement = async (req, res) => {
 		
 		return res.status(200).json({ success: true, message: "Placement deleted successfully" });
 	} catch (err) {
-		console.error("Error in deletePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		errorLogger(err,req, "Delete Placement Controller")
         return res.status(500).json({ success: false, message:  "Server Error. Please Try Again Later." });
     }
 	
@@ -679,7 +679,7 @@ const getOwnPlacements = async (req, res) => {
 		const placements = await Placement.find({ stuID: studentId }).sort({ createdAt: -1 }).lean();
 		return res.status(200).json({ success: true, data: placements });
 	} catch (err) {
-		console.error("Error in getOwnPlacements controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		errorLogger(err,req, "Get own Placement Controller")
         return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     
 	}
@@ -712,7 +712,7 @@ const getPlacementsByStudentId = async (req, res) => {
 
 		return res.status(200).json({ success: true, data: placements });
 	} catch (err) {
-		console.error("Error in getPlacementsByStudentId controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		errorLogger(err,req, "Get Placements by studnet id Controller")
         return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
 	}
 };
@@ -755,7 +755,7 @@ const getSinglePlacement = async (req, res) => {
 
 		return res.status(200).json({ success: true, data: existingPlacement });
 	} catch (err) {
-		console.error("Error in getSinglePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		errorLogger(err,req, "Get single Placement Controller")
         return res.status(500).json({ success: false, message:  "Server Error. Please Try Again Later." });
 	}
 };

@@ -1,4 +1,5 @@
 const FailedCloudinaryDeletion = require("../../models/FailedCloudinaryDeletion");
+const errorLogger = require("../winston/errorLogger");
 
 const insertFailedCloudinaryDeletion = async (files = []) => {
     try {
@@ -18,7 +19,7 @@ const insertFailedCloudinaryDeletion = async (files = []) => {
         await FailedCloudinaryDeletion.insertMany(validFiles);
 
     } catch (err) {
-        console.error("Failed to log Cloudinary deletion failure:", err);
+        errorLogger(err, null, "Error in insertFailedCloudinary Deletions helper")
     }
 };
 

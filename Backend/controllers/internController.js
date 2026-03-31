@@ -8,7 +8,7 @@ const {validateAndUploadFiles} = require("../helpers/cloudinary/ValidateAndUploa
 const mongoose=require("mongoose");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformInternship, internshipColumnMap } = require('../helpers/excel/exportTransformers');
-
+const errorLogger = require("../helpers/winston/errorLogger");
 
 const { internshipValidationSchema, updateInternshipValidationSchema, getInternshipsValidation, validateStudentID } = require("../validators/internshipValidation");
 
@@ -89,6 +89,21 @@ const createInternship = async (req, res) => {
 
         const { companyName, startDate, endDate, role, durationMonths, isPaid, stipend, description } = value;
 
+        // CHeck if such internship already exists.
+        const existing = await Internship.findOne({
+            stuID,
+            companyName,
+            role,
+            startDate
+        });
+
+        if (existing) {
+            return res.status(409).json({
+                success: false,
+                message: "Internship already exists"
+            });
+        }
+
         // Manual check
         if (isPaid === true && (stipend === undefined || stipend === null)) {
             return res.status(400).json({ success: false, message: "Stipend amount required if internship is paid" });
@@ -108,7 +123,6 @@ const createInternship = async (req, res) => {
 
 
         uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
-        
         
         // Create Internship
         const internship = new Internship({
@@ -137,7 +151,7 @@ const createInternship = async (req, res) => {
         return res.status(201).json({ success: true, data: savedResult });
 
     } catch (err) {
-        console.error("Error in createInternship  controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        errorLogger(err,req, "Create Internship Controller")
         
         // if save to DB operation fails, then files stored in cloudinary must be deleted, as files are useless now
         if (!dbSaved && uploadedFiles) {
@@ -366,7 +380,7 @@ const updateInternship = async (req, res) => {
 
 
     } catch (err) {
-        console.error("Error in updateInternship controller: ",  "\ntime = ", new Date().toISOString(), "\nError: ", err );
+        errorLogger(err,req, "Update Internship Controller")
 
         if (!dbSaved && newPublicIds.length > 0) {
             await deleteMultipleFromCloudinary(newPublicIds);
@@ -569,7 +583,7 @@ const getInternships = async (req, res) => {
         });
 
     } catch (err) {
-        console.error("Error in getInternships controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        errorLogger(err,req, "Get Internships Controller")
         return res.status(500).json({ success: false, message: "Some Error Occurred. Please Try Again Later." });
     }
 };
@@ -726,7 +740,7 @@ const getOwnInternships = async (req, res) => {
 
         return res.status(200).json({ success: true, data: internships });
     } catch (err) {
-        console.error("Error in getOwnInternships controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        errorLogger(err,req, "Get own Internship Controller")
         return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
@@ -768,7 +782,7 @@ const getStudentInternshipsByAdmin = async (req, res) => {
 
         return res.status(200).json({ success: true, data: internships });
     } catch (err) {
-        console.error("Error in getInternships controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        errorLogger(err,req, "Get Single Internship By Admin Controller")
         return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
@@ -814,7 +828,7 @@ const getSingleInternship = async (req, res) => {
 
         return res.status(200).json({ success: true, data: internship });
     } catch (err) {
-        console.error("Error in getSingleInternship controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        errorLogger(err,req, "Get Single Internship Controller")
         return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
@@ -883,7 +897,7 @@ const deleteInternship = async (req, res) => {
         return res.status(200).json({ success: true, message: "Internship deleted successfully" });
 
     } catch (err) {
-        console.error("Error in deleteInternship controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        errorLogger(err,req, "Delete Internship Controller")
         return res.status(500).json({ success: false, message :  "Server Error. Please Try Again Later." });
     }
 };

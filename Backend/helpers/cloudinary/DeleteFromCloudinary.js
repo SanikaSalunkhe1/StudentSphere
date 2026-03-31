@@ -1,6 +1,6 @@
 const cloudinary = require("../../config/cloudinaryConfig.js");
 const { insertFailedCloudinaryDeletion } = require("../failedCloudinaryDeletetion/insertFailedCloudinaryDeletion.js");
-
+const errorLogger = require("../winston/errorLogger.js")
 const deleteFromCloudinary = async (publicId) => {
 
 	if (!publicId || typeof publicId !== "string" || publicId.trim() === "") {
@@ -27,7 +27,7 @@ const deleteFromCloudinary = async (publicId) => {
 
 	} catch (err) {
 
-		console.error("❌ Cloudinary deletion error:", err);
+		errorLogger(err,null, "Delete From Cloudinary Helper function");
 
 		await insertFailedCloudinaryDeletion([
 			{

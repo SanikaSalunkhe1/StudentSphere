@@ -4,6 +4,7 @@ const fs = require("fs").promises;
 const upload = require("../../middlewares/multer.js");
 
 const cloudinary = require("../../config/cloudinaryConfig.js");
+const errorLogger = require("../winston/errorLogger.js");
 
 
 
@@ -20,14 +21,14 @@ const uploadToCloudinary = async (localFilePath) => {
 
     } catch (error) {
 
-        console.error("Failed to upload file to cloudinary: ", error);
+        errorLogger(error, null, "UploadToCloudinary helper function")
         throw error;
     } finally {
         try {
             await fs.unlink(localFilePath);
             console.log("Temp file deleted:", localFilePath);
         } catch (err) {
-            console.error("Failed to delete temp file:", err);
+            errorLogger(err, null, "UploadToCloudinary helper function - failed to delete temp file")
         }
     }
 }

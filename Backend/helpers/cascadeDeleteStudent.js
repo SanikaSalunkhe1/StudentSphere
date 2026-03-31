@@ -9,6 +9,7 @@ const HigherStudies = require("../models/HigherStudies");
 const Internship = require("../models/Internship");
 const Placement = require("../models/Placement");
 const SemesterInfo = require("../models/SemesterInfo");
+const errorLogger = require("./winston/errorLogger");
 
 
 // Helper → Safely read nested field path (e.g., "photoProof.publicId")
@@ -97,7 +98,7 @@ const cascadeDeleteStudent = async (studentId) => {
         return true;
 
     } catch (err) {
-        console.error("Cascade delete failed:", err);
+        errorLogger(err, null, "Error in cascade Delete student helper function")
         return false;
     }
 };

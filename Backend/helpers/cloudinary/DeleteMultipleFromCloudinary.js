@@ -1,5 +1,6 @@
 const cloudinary = require("../../config/cloudinaryConfig");
-const {insertFailedCloudinaryDeletion} = require("../failedCloudinaryDeletetion/insertFailedCloudinaryDeletion")
+const {insertFailedCloudinaryDeletion} = require("../failedCloudinaryDeletetion/insertFailedCloudinaryDeletion");
+const errorLogger = require("../winston/errorLogger");
 
 const deleteMultipleFromCloudinary = async (publicIds = []) => {
 
@@ -35,7 +36,8 @@ const deleteMultipleFromCloudinary = async (publicIds = []) => {
         return { deleted, failed };
 
     } catch (err) {
-        console.error("Cloudinary bulk deletion error:", err);
+    
+        errorLogger(err, null, "Cloudinary BUlk deleteion error")
 
         // If the whole bulk request fails, mark all as failed
         const failed = validPublicIds.map(id => ({

@@ -1,4 +1,5 @@
 const multer = require("multer");
+const errorLogger = require("../helpers/winston/errorLogger");
 
 const errorHandler = (err, req, res, next) => {
 
@@ -33,13 +34,12 @@ const errorHandler = (err, req, res, next) => {
     }
 
     // anything expect above errors are unexpected errors - so log them on the console.
-    console.error("From middlewares/errorHandler : ",err);
+    errorLogger(err,req,"errorHandler middleware")
 
     // Handle custom validation errors
     if (err.message) {
         return res.status(400).json({
         success: false,
-        message: err.message,
         });
     }
 

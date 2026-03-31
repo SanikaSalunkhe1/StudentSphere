@@ -8,7 +8,7 @@ const transformInternship = (i) => ({
     endDate:            i.endDate   ? new Date(i.endDate).toLocaleDateString()   : '',
     durationMonths:     i.durationMonths                  || '',
     isPaid:             i.stipendInfo?.isPaid ? 'Yes' : 'No',
-    stipendAmount:      i.stipendInfo?.amount              || '',
+    stipendAmount:      i.stipendInfo?.stipend              || '',
     description:        i.description                      || '',
     internshipReport:   i.internshipReport?.url               || '',
     photoProof:         i.photoProof?.url                      || '',
@@ -171,7 +171,7 @@ const transformPlacement = (p) => ({
     placementYear:      p.placementYear                   || '',
     passoutYear:        p.passoutYear                     || '',
     joiningYear:        p.joiningYear                     || '',
-    placementProof:     p.placementProof?.url              || '',
+    placementProof:     p.placementProof                  || '',
 
     // Student identity
     stuID:              p.stuID?.toString()               || '',
