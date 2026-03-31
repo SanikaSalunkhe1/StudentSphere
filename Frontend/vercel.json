@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://student-website-backend-odq5.onrender.com/api/:path*"
+      "destination": "https://studentsphere-okrf.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
@@ -18,7 +18,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://student-website-backend-odq5.onrender.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self';"
+          "value": "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://studentsphere-okrf.onrender.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self';"
         },
         {
           "key": "X-Content-Type-Options",
