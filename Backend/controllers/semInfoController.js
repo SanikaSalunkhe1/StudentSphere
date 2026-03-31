@@ -4,6 +4,7 @@ const Student = require("../models/Student");
 const { semInfoCreateSchema, semInfoUpdateSchema, getSemInfosValidation } = require("../validators/seminfoValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformSemesterInfo, semesterInfoColumnMap } = require('../helpers/excel/exportTransformers');
+const errorLogger = require("../helpers/winston/errorLogger");
 
 // Validation error response helper
 const validationErrorResponse = (res, details) =>
@@ -100,7 +101,7 @@ const addSemInfo = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("addSemInfo error:", err);
+    errorLogger(err, req, "addSemInfo");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -153,7 +154,7 @@ const updateSemInfo = async (req, res) => {
     let bodyToValidate = req.body;
 
     if (req.user.role === "student") {
-      const allowed = ["attendance", "kts", "journalTaken", "examFormFilled"];
+      const allowed = ["attendance", "kts", "marks", "journalTaken", "examFormFilled"];
       bodyToValidate = Object.fromEntries(
         Object.entries(req.body).filter(([key]) => allowed.includes(key))
       );
@@ -184,7 +185,7 @@ const updateSemInfo = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("updateSemInfo error:", err);
+    errorLogger(err, req, "updateSemInfo");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -236,7 +237,7 @@ const deleteSemInfo = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("deleteSemInfo error:", err);
+    errorLogger(err, req, "deleteSemInfo");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -295,8 +296,12 @@ const getAllSemInfos = async (req, res) => {
     }
 
     if (req.user.role === "admin") {
-      if (year) match["student.year"] = year.trim();
-      if (division) match["student.division"] = division.trim();
+      // FIX: Joi already trims and uppercases `year` and trims `division`,
+      // so remove the redundant .trim() calls here. Using the raw value
+      // directly also avoids the case where .trim() on an already-clean string
+      // was masking that the Joi-validated value was simply not being used.
+      if (year) match["student.year"] = year;
+      if (division) match["student.division"] = division;
     }
 
     // Semester
@@ -316,13 +321,36 @@ const getAllSemInfos = async (req, res) => {
 
     // Search
     if (search) {
-      const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+      // FIX 1: The original escape regex included \s, which caused spaces in the
+      // search term to be escaped into "\ " — producing an invalid/broken MongoDB
+      // regex when searching full names like "Rahul Sharma". Space is not a regex
+      // metacharacter and must NOT be escaped. Removed \s from the character class.
+      const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&");
 
+      // FIX 2: Added a $expr + $regexMatch stage on the full concatenated name
+      // (firstName + " " + lastName) so that searching "Rahul Sharma" matches even
+      // though no single name sub-field contains the full string. Without this, a
+      // full-name search would silently return 0 results.
       match.$or = [
         { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
         { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
         { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
         { "student.studentID": { $regex: safeSearch, $options: "i" } },
+        {
+          $expr: {
+            $regexMatch: {
+              input: {
+                $concat: [
+                  { $ifNull: ["$student.name.firstName", ""] },
+                  " ",
+                  { $ifNull: ["$student.name.lastName", ""] },
+                ],
+              },
+              regex: safeSearch,
+              options: "i",
+            },
+          },
+        },
       ];
     }
 
@@ -429,11 +457,7 @@ const getAllSemInfos = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(
-      "Error in getAllSemInfos controller:",
-      "\ntime =", new Date().toISOString(),
-      "\nError:", err
-    );
+    errorLogger(err, req, "getAllSemInfos");
 
     return res.status(500).json({
       success: false,
@@ -455,7 +479,7 @@ const getOwnSemInfos = async (req, res) => {
     res.status(200).json({ success: true, data });
 
   } catch (err) {
-    console.error("getOwnSemInfos error:", err);
+    errorLogger(err, req, "getOwnSemInfos");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -502,7 +526,7 @@ const getStudentSemInfos = async (req, res) => {
     res.status(200).json({ success: true, data });
 
   } catch (err) {
-    console.error("getStudentSemInfos error:", err);
+    errorLogger(err, req, "getStudentSemInfos");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
