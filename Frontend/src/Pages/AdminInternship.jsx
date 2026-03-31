@@ -3,6 +3,7 @@ import { internshipService } from "../services/internshipService";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
 import Pagination from "../components/Common/Pagination";
+import SendNotificationButton from "../components/Common/SendNotificationButton";
 
 // InternshipCard Component - COMPACT & BEAUTIFUL
 function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {
@@ -981,8 +982,30 @@ export default function AdminInternship() {
                 2. Click <span className="font-semibold text-emerald-600">Export</span> to download the data.
               </div>
             </div>
+            <SendNotificationButton
+              moduleKey="internship"
+              records={internships}
+              emailMap={{}} // optional if emails already inside records
+              loadRecords={async () => {
+                const res = await internshipService.getAllInternships();
+                return res?.data || [];
+              }}
+              resolveEmailMap={async (records) => {
+                const map = {};
+                for (let rec of records) {
+                  if (rec.studentID) {
+                    try {
+                      const res = await studentService.getStudentByStudentID(rec.studentID);
+                      map[rec.studentID] = res?.data?.email || "";
+                    } catch (err) {}
+                  }
+                }
+                return map;
+              }}
+            />
           </div>
         </div>
+        
 
         {/* Row 2 — Advanced filters */}
         <div>
