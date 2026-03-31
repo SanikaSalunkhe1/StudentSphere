@@ -77,6 +77,7 @@ app.use("/api/higherStudies", require("./routes/HigherStudiesRoutes"));
 app.use("/api/student", require("./routes/StudentRoutes"));
 app.use("/api/divisionIncharge", require("./routes/divisionInchargeRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/emails", require("./routes/sendBulkEmailRoutes"));
 // after all routes
 app.use(errorHandler);
