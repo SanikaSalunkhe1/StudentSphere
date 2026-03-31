@@ -6,6 +6,7 @@ const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUpl
 const { createAchievementSchema, updateAchievementSchema, getAchievementsValidation } = require("../validators/achievementValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformAchievement, achievementColumnMap } = require('../helpers/excel/exportTransformers');
+const errorLogger = require("../helpers/winston/errorLogger");
 
 
 /* VALIDATION ERROR RESPONSE HELPER */
@@ -144,8 +145,6 @@ const createAchievement = async (req, res) => {
       data: achievement,
     });
   } catch (err) {
-    console.error("Create Achievement Error:", err);
-
     // FIX: cleanup runs BEFORE sending the response so that a Cloudinary failure
     // does not throw on an already-closed response stream.
     if (!dbSaved && uploadedFiles) {
@@ -156,10 +155,11 @@ const createAchievement = async (req, res) => {
       try {
         await deleteMultipleFromCloudinary(ids);
       } catch (cleanupErr) {
-        console.error("Cloudinary cleanup failed after create error:", cleanupErr);
+        errorLogger(cleanupErr, req, "createAchievement - Cloudinary cleanup");
       }
     }
 
+    errorLogger(err, req, "createAchievement");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -310,7 +310,7 @@ const getAllAchievements = async (req, res) => {
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error("GetAllAchievements Error:", err);
+    errorLogger(err, req, "getAllAchievements");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -453,7 +453,7 @@ const updateAchievement = async (req, res) => {
         await deleteMultipleFromCloudinary(validOldIds);
       } catch (cleanupErr) {
         // Non-fatal: DB is already consistent. Log and move on.
-        console.error("Cloudinary old-file cleanup failed after update:", cleanupErr);
+        errorLogger(cleanupErr, req, "updateAchievement - Cloudinary old-file cleanup");
       }
     }
 
@@ -463,8 +463,6 @@ const updateAchievement = async (req, res) => {
       data: achievement,
     });
   } catch (err) {
-    console.error("Update Achievement Error:", err);
-
     // Clean up any newly uploaded files if the DB save never succeeded.
     // Wrapped in its own try/catch so a Cloudinary failure does not mask the
     // original error or throw on an already-closed response.
@@ -472,10 +470,11 @@ const updateAchievement = async (req, res) => {
       try {
         await deleteMultipleFromCloudinary(newPublicIds);
       } catch (cleanupErr) {
-        console.error("Cloudinary cleanup failed after update error:", cleanupErr);
+        errorLogger(cleanupErr, req, "updateAchievement - Cloudinary cleanup after error");
       }
     }
 
+    errorLogger(err, req, "updateAchievement");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -519,7 +518,7 @@ const deleteAchievement = async (req, res) => {
       achievement.course_certificate?.publicId,
     ].filter(Boolean);
 
-    // FIX: delete from Cloudinary FIRST, then remove the DB record.
+    // delete from Cloudinary FIRST, then remove the DB record.
     // Reversing this order meant: if Cloudinary failed, the DB row was already
     // gone but the files were permanently orphaned with no recovery path.
     // Now if Cloudinary fails we return 500 and the DB record is still intact —
@@ -530,7 +529,7 @@ const deleteAchievement = async (req, res) => {
       try {
         await deleteMultipleFromCloudinary(publicIds);
       } catch (cleanupErr) {
-        console.error("Cloudinary delete failed during achievement deletion:", cleanupErr);
+        errorLogger(cleanupErr, req, "deleteAchievement - Cloudinary delete");
         return res.status(500).json({
           success: false,
           message: "Failed to delete associated files. Please try again.",

@@ -11,6 +11,7 @@ const {
 
 const exportToExcel = require("../helpers/excel/exportToExcel");
 const { transformAdmission, admissionColumnMap } = require("../helpers/excel/exportTransformers");
+const errorLogger = require("../helpers/winston/errorLogger");
 
 // Build a 400 validation-error response from Joi details
 const validationErrorResponse = (res, details) =>
@@ -72,15 +73,24 @@ const createAdmission = async (req, res) => {
 
       stuID = student._id;
 
-      // Division Incharge restriction
-      if (
-        req.user.role === "divisionIncharge" &&
-        (student.year !== req.user.year || student.division !== req.user.division)
-      ) {
-        return res.status(403).json({
-          success: false,
-          message: "You can only manage students within your own division",
-        });
+      // Division Incharge restriction and student assignment logic
+      if (req.user.role === "divisionIncharge") {
+        if (!student.year && !student.division) {
+          // If the student has no assigned year and division, claim them for this division
+          await Student.findByIdAndUpdate(student._id, {
+            year: req.user.year,
+            division: req.user.division
+          });
+          // Update the localized lean object so admission gets the correct year/div
+          student.year = req.user.year;
+          student.division = req.user.division;
+        } else if (student.year !== req.user.year || student.division !== req.user.division) {
+          // Student is already assigned to a different division
+          return res.status(403).json({
+            success: false,
+            message: `Student already belongs to Year ${student.year || 'Unknown'} Div ${student.division || 'Unknown'} and cannot be added to your division.`,
+          });
+        }
       }
     }
 
@@ -118,7 +128,7 @@ const createAdmission = async (req, res) => {
         message: "Admission already exists for this student.",
       });
     }
-    console.error("createAdmission error:", err);
+    errorLogger(err, req, "createAdmission");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -135,7 +145,7 @@ const getAdmissionsByStudent = async (req, res) => {
 
     return res.status(200).json({ success: true, data: admissions });
   } catch (err) {
-    console.error("getAdmissionsByStudent error:", err);
+    errorLogger(err, req, "getAdmissionsByStudent");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -167,7 +177,10 @@ const updateAdmission = async (req, res) => {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
 
-    if (admission.status !== "pending") {
+    // Admins can edit regardless of status.
+    // Students can also edit regardless of status (they may need to correct details).
+    // Only Division Incharges are restricted to pending admissions.
+    if (req.user.role === "divisionIncharge" && admission.status !== "pending") {
       return res.status(400).json({
         success: false,
         message: "Cannot update after approval or rejection",
@@ -198,7 +211,7 @@ const updateAdmission = async (req, res) => {
       data: admission,
     });
   } catch (err) {
-    console.error("updateAdmission error:", err);
+    errorLogger(err, req, "updateAdmission");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -220,7 +233,9 @@ const deleteAdmission = async (req, res) => {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
 
-    if (admission.status !== "pending") {
+    // Admin can delete any admission regardless of status.
+    // Student and Division Incharge can only delete pending admissions.
+    if (req.user.role !== "admin" && admission.status !== "pending") {
       return res.status(400).json({
         success: false,
         message: "Cannot delete after approval or rejection",
@@ -249,7 +264,7 @@ const deleteAdmission = async (req, res) => {
       message: "Admission deleted successfully",
     });
   } catch (err) {
-    console.error("deleteAdmission error:", err);
+    errorLogger(err, req, "deleteAdmission");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -352,7 +367,7 @@ const getAllAdmissions = async (req, res) => {
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error("getAllAdmissions error:", err);
+    errorLogger(err, req, "getAllAdmissions");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -377,7 +392,9 @@ const updateAdmissionStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
 
-    if (admission.status !== "pending") {
+    // Admin can change status on any admission (e.g. fix a wrongly approved/rejected one).
+    // Division Incharge can only act on pending admissions.
+    if (req.user.role !== "admin" && admission.status !== "pending") {
       return res.status(400).json({
         success: false,
         message: "Cannot change status after approval or rejection",
@@ -403,7 +420,7 @@ const updateAdmissionStatus = async (req, res) => {
       data: admission,
     });
   } catch (err) {
-    console.error("updateAdmissionStatus error:", err);
+    errorLogger(err, req, "updateAdmissionStatus");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -430,7 +447,7 @@ const getUnpaidStudents = async (req, res) => {
 
     return res.status(200).json({ success: true, data: unpaid });
   } catch (err) {
-    console.error("getUnpaidStudents error:", err);
+    errorLogger(err, req, "getUnpaidStudents");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };

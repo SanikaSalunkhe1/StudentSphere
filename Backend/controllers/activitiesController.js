@@ -6,6 +6,7 @@ const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUpl
 const { activityCreateSchema, activityUpdateSchema, getActivitiesValidation } = require("../validators/activitiesValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformActivity, activityColumnMap } = require('../helpers/excel/exportTransformers');
+const errorLogger = require("../helpers/winston/errorLogger");
 
 
 // Validation error helper
@@ -143,11 +144,11 @@ const createActivity = async (req, res) => {
       try {
         await deleteMultipleFromCloudinary(ids);
       } catch (cleanupErr) {
-        console.error("Cloudinary cleanup failed after create error:", cleanupErr);
+        errorLogger(cleanupErr, req, "createActivity - Cloudinary cleanup");
       }
     }
 
-    console.error("Create Activity Error:", err);
+    errorLogger(err, req, "createActivity");
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -367,7 +368,7 @@ const getAllActivities = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("GetAllActivities Error:", err);
+    errorLogger(err, req, "getAllActivities");
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -454,7 +455,7 @@ const updateActivity = async (req, res) => {
       try {
         await deleteMultipleFromCloudinary([oldPublicId]);
       } catch (cleanupErr) {
-        console.error("Cloudinary old-file cleanup failed after activity update:", cleanupErr);
+        errorLogger(cleanupErr, req, "updateActivity - Cloudinary old-file cleanup");
       }
     }
 
@@ -475,11 +476,11 @@ const updateActivity = async (req, res) => {
       try {
         await deleteMultipleFromCloudinary(ids);
       } catch (cleanupErr) {
-        console.error("Cloudinary cleanup failed after activity update error:", cleanupErr);
+        errorLogger(cleanupErr, req, "updateActivity - Cloudinary cleanup after error");
       }
     }
 
-    console.error("Update Activity Error:", err);
+    errorLogger(err, req, "updateActivity");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -488,7 +489,7 @@ const updateActivity = async (req, res) => {
 
 const deleteActivity = async (req, res) => {
   try {
-    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    //validate ObjectId before querying to avoid Mongoose CastError / 500 leak
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: "Invalid activity ID" });
     }
@@ -530,7 +531,7 @@ const deleteActivity = async (req, res) => {
       ? [activity.certificateURL.publicId]
       : [];
 
-    // FIX: delete from Cloudinary FIRST, then remove the DB record.
+    //delete from Cloudinary FIRST, then remove the DB record.
     // Previously findByIdAndDelete ran first — if Cloudinary then failed, the DB
     // row was already gone but the file was permanently orphaned with no recovery.
     // Now: if Cloudinary fails we return 500 and the DB record stays intact so
@@ -540,7 +541,7 @@ const deleteActivity = async (req, res) => {
       try {
         await deleteMultipleFromCloudinary(publicIds);
       } catch (cleanupErr) {
-        console.error("Cloudinary delete failed during activity deletion:", cleanupErr);
+        errorLogger(cleanupErr, req, "deleteActivity - Cloudinary delete");
         return res.status(500).json({
           success: false,
           message: "Failed to delete associated files. Please try again.",

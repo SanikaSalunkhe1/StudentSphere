@@ -10,6 +10,7 @@ export default function AccreditationReports() {
   const [loading, setLoading] = useState(false);
   const [year, setYear] = useState("");
   const [branch, setBranch] = useState("");
+  const [committee, setCommittee] = useState("NAAC");
   const [exporting, setExporting] = useState(false);
 
   const fetchData = async () => {
@@ -70,7 +71,7 @@ export default function AccreditationReports() {
         heightLeft -= pageHeight;
       }
 
-      pdf.save(`Accreditation_Report_${branch || "All"}_${year || "All"}.pdf`);
+      pdf.save(`${committee}_Report_${branch || "All"}_${year || "All"}.pdf`);
       toast.success("PDF Generated Successfully!");
     } catch (error) {
       console.error("PDF Gen Error:", error);
@@ -96,6 +97,18 @@ export default function AccreditationReports() {
       </div>
 
       <div className="bg-white p-4 rounded shadow flex gap-4 items-end mb-6 font-sans">
+        <div>
+          <label className="block text-sm font-bold text-slate-700">Committee</label>
+          <select 
+            className="border p-2 rounded w-full"
+            value={committee}
+            onChange={(e) => setCommittee(e.target.value)}
+          >
+            <option value="NAAC">NAAC</option>
+            <option value="NBA">NBA</option>
+            <option value="AICTE">AICTE</option>
+          </select>
+        </div>
         <div>
           <label className="block text-sm font-bold text-slate-700">Academic Year</label>
           <input 
@@ -134,15 +147,23 @@ export default function AccreditationReports() {
             <h4 className="text-lg font-bold mb-1 uppercase tracking-wide">Nagar Yuwak Shikshan Santha, Airoli’s</h4>
             <h1 className="text-3xl font-extrabold text-red-900 mb-2 uppercase tracking-wider font-sans">Datta Meghe College of Engineering</h1>
             <p className="text-sm font-semibold mb-2">(Recognized by AICTE, DTE, Govt of Maharashtra & Affiliated To University of Mumbai)</p>
-            <p className="text-sm font-bold mb-6 text-blue-900">NAAC (Cycle 2) ‘A’ Grade Accredited, NBA accredited (Chemical Engg. & Civil Engg.)</p>
+            {committee === 'NAAC' && (
+              <p className="text-sm font-bold mb-6 text-blue-900">NAAC (Cycle 2) ‘A’ Grade Accredited</p>
+            )}
+            {committee === 'NBA' && (
+              <p className="text-sm font-bold mb-6 text-blue-900">NBA Accredited (Chemical Engg. & Civil Engg.)</p>
+            )}
+            {committee === 'AICTE' && (
+              <div className="mb-6"></div>
+            )}
             
             <div className="my-10">
-              <h2 className="text-2xl font-bold uppercase underline decoration-2 underline-offset-4">Institutional Accreditation Report</h2>
+              <h2 className="text-2xl font-bold uppercase underline decoration-2 underline-offset-4">{committee} Accreditation Report</h2>
               <h3 className="text-xl font-bold mt-4 tracking-wide text-gray-800">CSI CATT {year || "2025-26"}</h3>
             </div>
             
             <div className="mt-8 text-lg font-semibold text-gray-700">
-              <p>Prepared for: NAAC / NBA Evaluators</p>
+              <p>Prepared for: {committee} Evaluators</p>
               <p className="mt-2">Department: {branch ? branch + " Engineering" : "All Departments"}</p>
               <p className="mt-2">Date of Report: {new Date().toLocaleDateString()}</p>
             </div>
@@ -152,13 +173,15 @@ export default function AccreditationReports() {
           <div className="mb-10 text-justify">
             <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">1. Introduction</h3>
             <p>
-              This report provides a comprehensive summary of student performance, career growth, and academic achievements for the specified academic period. Designed to meet the stringent guidelines of NAAC and NBA accreditation processes, the document highlights criterion-wise statistical data pertaining to student demographics, placement successes, internship participations, and overarching achievements. The data presented herein forms a crucial component of the institution's continuous quality improvement and evaluation cycle.
+              This report provides a comprehensive summary of student performance, career growth, and academic achievements for the specified academic period. Designed to meet the guidelines of {committee} accreditation processes, the document highlights criterion-wise statistical data pertaining to student demographics, placement successes, internship participations, and overarching achievements. The data presented herein forms a crucial component of the institution's continuous quality improvement and evaluation cycle.
             </p>
           </div>
 
           {/* CRITERION 1: DEMOGRAPHICS */}
           <div className="mb-10 page-break-inside-avoid">
-            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">2. Criterion 1: Student Demographics</h3>
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">
+              2. {committee === 'NAAC' ? 'Profile of Department (Demographics)' : committee === 'NBA' ? 'Program Enrollment & Demographics' : 'Mandatory Disclosure: Approved Intake & Demographics'}
+            </h3>
             <p className="mb-4">
               The following table summarizes the enrollment and diversity of students within the department. This demographic analysis plays a pivotal role in understanding the reach and inclusive educational environment provided.
             </p>
@@ -187,7 +210,9 @@ export default function AccreditationReports() {
 
           {/* CRITERION 2: PLACEMENTS */}
           <div className="mb-10">
-            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">3. Criterion 2: Placements & Career Growth</h3>
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">
+              3. {committee === 'NAAC' ? 'Criterion 5: Student Support & Progression (Placements)' : committee === 'NBA' ? "Criterion 4: Students' Performance (Placements)" : 'Placement Records'}
+            </h3>
             <p className="mb-4">
               A key indicator of academic excellence and industry readiness is the placement record. This section outlines the employment statistics and salary structures achieved by the graduating cohorts.
             </p>
@@ -228,7 +253,9 @@ export default function AccreditationReports() {
 
           {/* CRITERION 3: INTERNSHIPS */}
           <div className="mb-10 page-break-inside-avoid">
-            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">4. Criterion 3: Internships and Practical Exposure</h3>
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">
+              4. {committee === 'NAAC' ? 'Criterion 1: Curricular Enrichment (Internships)' : committee === 'NBA' ? 'Industry Interaction & Practical Exposure' : 'Industry Linkages & Trainings'}
+            </h3>
             <p className="mb-4 text-justify">
               Internships bridge the gap between theoretical knowledge and practical application. The table below represents student engagement in industry internships, differentiating between remunerated and non-remunerated opportunities.
             </p>
@@ -258,7 +285,9 @@ export default function AccreditationReports() {
 
           {/* CRITERION 4: ACHIEVEMENTS */}
           <div className="mb-10 page-break-inside-avoid">
-            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">5. Criterion 4: Student Achievements & Co-Curriculars</h3>
+            <h3 className="text-xl font-bold border-b-2 border-black pb-1 mb-4">
+              5. {committee === 'NAAC' ? 'Institutional Values & Best Practices (Achievements)' : committee === 'NBA' ? 'Continuous Improvement & Co-Curriculars' : 'Student Activities & External Participations'}
+            </h3>
             <p className="mb-4 text-justify">
               In addition to academic prowess, students exhibited commendable participation and success in various co-curricular and extracurricular domains, contributing effectively to their holistic development.
             </p>
