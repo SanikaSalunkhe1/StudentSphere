@@ -71,7 +71,7 @@ export default function ForgotPasswordPage({ role = "student" }) {
                     The link expires in <span className="font-bold text-orange-600">15 minutes</span>.
                   </p>
                 </div>
-                
+
                 <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-left space-y-2 shadow-sm">
                   <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">Didn't receive it?</p>
                   <ul className="text-[13px] text-blue-800 space-y-1.5 list-disc pl-4 font-medium">

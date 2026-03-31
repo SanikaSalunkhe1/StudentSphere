@@ -9,7 +9,7 @@ import Pagination from "../components/Common/Pagination";
 function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
   // Student info from projected fields
   const studentNameRaw = placement.studentName;
-  const studentName = studentNameRaw && 
+  const studentName = studentNameRaw &&
     (studentNameRaw.firstName || studentNameRaw.lastName) &&
     `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() !== "N/A"
     ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
@@ -22,10 +22,10 @@ function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
       {/* Document/Image Preview Section */}
       <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden relative">
         {(() => {
-          const proofUrl = typeof placement?.placementProof === 'string' 
-            ? placement.placementProof 
+          const proofUrl = typeof placement?.placementProof === 'string'
+            ? placement.placementProof
             : placement?.placementProof?.url;
-          
+
           if (!proofUrl) return (
             <div className="text-slate-300 text-5xl font-bold">
               {placement?.companyName?.charAt(0) || "?"}
@@ -71,7 +71,7 @@ function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-grow">
-        
+
         {/* Student Name */}
         {studentName && (
           <div className="mb-2">
@@ -128,11 +128,10 @@ function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
             <button
               onClick={() => onDelete && onDelete(placement._id)}
               disabled={isDeleting}
-              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
-                isDeleting 
-                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
-                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
-              }`}
+              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${isDeleting
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+                }`}
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </button>
@@ -147,7 +146,7 @@ function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
 function HigherStudyCard({ higherStudy, onView, onDelete, onEdit, isDeleting }) {
   // Student info from projected fields
   const studentNameRaw = higherStudy.studentName;
-  const studentName = studentNameRaw 
+  const studentName = studentNameRaw
     ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
     : "N/A";
   const studentID = higherStudy.studentID || "N/A";
@@ -190,18 +189,18 @@ function HigherStudyCard({ higherStudy, onView, onDelete, onEdit, isDeleting }) 
             {studentID}
           </span>
           <span className="px-2 py-0.5 bg-blue-600/90 backdrop-blur-md text-[10px] font-bold text-white rounded shadow-sm border border-blue-500/20 uppercase tracking-tighter font-mono">
-           {studentYear}
+            {studentYear}
           </span>
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-grow">
-        
+
         {/* Student Name */}
         <div className="mb-2">
-           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student</p>
-           <h4 className="text-sm font-black text-slate-900 line-clamp-1">{studentName}</h4>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student</p>
+          <h4 className="text-sm font-black text-slate-900 line-clamp-1">{studentName}</h4>
         </div>
 
         <div className="h-px bg-slate-100 mb-3" />
@@ -236,11 +235,10 @@ function HigherStudyCard({ higherStudy, onView, onDelete, onEdit, isDeleting }) 
             <button
               onClick={() => onDelete && onDelete(higherStudy._id)}
               disabled={isDeleting}
-              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
-                isDeleting 
-                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
-                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
-              }`}
+              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${isDeleting
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+                }`}
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </button>
@@ -596,10 +594,10 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
       onClose();
     } catch (err) {
       console.error("Error saving placement:", err);
-      const errorMessage = 
-        err.response?.data?.errors?.map(e => e.message).join(", ") || 
-        err.response?.data?.error || 
-        err.response?.data?.message || 
+      const errorMessage =
+        err.response?.data?.errors?.map(e => e.message).join(", ") ||
+        err.response?.data?.error ||
+        err.response?.data?.message ||
         "Failed to save record.";
       toast.error(errorMessage);
     } finally {
@@ -627,13 +625,13 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          
+
           <section>
             <div className="flex items-center gap-2 mb-6">
               <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
               <h4 className="text-lg font-bold text-slate-800">Primary Details</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               <div>
                 <label className={labelClass}>Student ID *</label>
@@ -662,7 +660,7 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
               <div className="h-6 w-1.5 bg-indigo-500 rounded-full"></div>
               <h4 className="text-lg font-bold text-slate-800">Compensation & Timeline</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               <div>
                 <label className={labelClass}>Package (LPA) *</label>
@@ -677,11 +675,11 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
               </div>
               <div>
                 <label className={labelClass}>Passout Year *</label>
-                <input type="text" name="passoutYear" placeholder="e.g. 2024" required value={formData.passoutYear} onChange={handleChange} className={inputClass} />
+                <input type="text" name="passoutYear" placeholder="e.g. 2023-24" required value={formData.passoutYear} onChange={handleChange} className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>Joining Year *</label>
-                <input type="text" name="joiningYear" placeholder="e.g. 2024" required value={formData.joiningYear} onChange={handleChange} className={inputClass} />
+                <input type="text" name="joiningYear" placeholder="e.g. 2024-25" required value={formData.joiningYear} onChange={handleChange} className={inputClass} />
               </div>
             </div>
           </section>
@@ -864,43 +862,15 @@ export default function AdminPlacement() {
   };
 
   const handleSavePlacement = (updatedItem) => {
-    if (placementToEdit) {
-      setPlacements((prev) =>
-        prev.map((p) =>
-          p._id === updatedItem._id
-            ? {
-                ...updatedItem,
-                stuID: p.stuID || updatedItem.stuID,
-                studentName: p.studentName || updatedItem.studentName,
-                studentID: p.studentID || updatedItem.studentID,
-                studentYear: p.studentYear || updatedItem.studentYear,
-              }
-            : p
-        )
-      );
-    } else {
-      fetchPlacements(currentPage);
-    }
+    // ALWAYS refetch for both edit and new to ensure all 
+    // populated fields (student name, ID, year) are visible.
+    fetchPlacements(currentPage);
   };
 
   const handleSaveHigherStudy = (updatedItem) => {
-    if (higherStudyToEdit) {
-      setHigherStudies((prev) =>
-        prev.map((h) =>
-          h._id === updatedItem._id
-            ? {
-                ...updatedItem,
-                stuID: h.stuID || updatedItem.stuID,
-                studentName: h.studentName || updatedItem.studentName,
-                studentID: h.studentID || updatedItem.studentID,
-                studentYear: h.studentYear || updatedItem.studentYear,
-              }
-            : h
-        )
-      );
-    } else {
-      fetchHigherStudies(currentPage);
-    }
+    // ALWAYS refetch for both edit and new to ensure all 
+    // populated fields (student name, ID, year) are visible.
+    fetchHigherStudies(currentPage);
   };
 
   const handleDeletePlacement = async (id) => {
@@ -1047,14 +1017,21 @@ export default function AdminPlacement() {
               className={`flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "higherStudies" ? "bg-blue-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}>Higher Studies</button>
 
-            <button onClick={handleExport}
-              className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Export
-            </button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2 flex-1 sm:flex-none">
+              <button onClick={handleExport}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export
+              </button>
+              <div className="text-[11px] text-slate-600 leading-tight">
+                <span className="font-semibold text-slate-800 block mb-0.5">How to export:</span>
+                1. Click <span className="font-semibold text-blue-600">Find</span> to apply filters.<br />
+                2. Click <span className="font-semibold text-green-600">Export</span> to download the data.
+              </div>
+            </div>
             {activeTab === "placements" && (
               <button
                 onClick={() => { setPlacementToEdit(null); setIsPlacementModalOpen(true); }}
@@ -1184,7 +1161,7 @@ export default function AdminPlacement() {
                 <option value="UPSC">UPSC</option>
               </select>
 
-              <input type="text" placeholder="Academic Year (e.g. 2023-24)" value={hsFilterAcademicYear}
+              <input type="text" placeholder="Academic Year (e.g. 2024-2025)" value={hsFilterAcademicYear}
                 onChange={(e) => setHsFilterAcademicYear(e.target.value)}
                 className="px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
@@ -1205,8 +1182,8 @@ export default function AdminPlacement() {
                 Find Higher Studies
               </button>
               <button
-                onClick={() => { 
-                  setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); setHsFilterAcademicYear(""); setHsFilterScore(""); 
+                onClick={() => {
+                  setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); setHsFilterAcademicYear(""); setHsFilterScore("");
                   fetchHigherStudies(1);
                 }}
                 className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
@@ -1417,8 +1394,8 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
         response = await higherStudiesService.updateHigherStudy(higherStudy._id, payload);
         toast.success("Higher study record updated successfully!");
       } else {
-        if (!marksheet) {
-          toast.error("Marksheet (PDF/Image) is required for new records.");
+        if (!marksheet || !idCardPhoto) {
+          toast.error("Both Marksheet and ID Card Photo are required for new records.");
           setLoading(false);
           return;
         }
@@ -1456,13 +1433,13 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          
+
           <section>
             <div className="flex items-center gap-2 mb-6">
               <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
               <h4 className="text-lg font-bold text-slate-800">Exam Details</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               <div>
                 <label className={labelClass}>Student ID *</label>
@@ -1481,7 +1458,7 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
               </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>Score *</label>
-                <input type="text" name="score" required value={formData.score} onChange={handleChange} placeholder="e.g. 98.5 percentile or 750" className={inputClass} />
+                <input type="text" name="score" required value={formData.score} onChange={handleChange} placeholder="e.g. 98.5% or 165/155" className={inputClass} />
               </div>
             </div>
           </section>
@@ -1504,7 +1481,7 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
               </div>
               <div>
                 <label className={labelClass}>
-                  ID Card Photo (Optional)
+                  ID Card Photo {!higherStudy && "*"}
                   <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
                     * Max 500KB, JPG/PNG only
                   </span>
@@ -1512,7 +1489,7 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
                 <input type="file" accept="image/jpeg, image/png, image/jpg" onChange={(e) => handleFileChange(e, setIdCardPhoto)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer" />
               </div>
             </div>
-            {!higherStudy && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Marksheet is strictly required when adding a new record.</p>}
+            {!higherStudy && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Both Marksheet and ID Card Photo are strictly required when adding a new record.</p>}
           </section>
 
           <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-6 flex justify-end gap-4 mt-8">

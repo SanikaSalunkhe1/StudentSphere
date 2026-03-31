@@ -132,8 +132,8 @@ function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {
               onClick={() => onDelete && onDelete(internship._id)}
               disabled={isDeleting}
               className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${isDeleting
-                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
                 }`}
             >
               {isDeleting ? "Deleting..." : "Delete"}
@@ -423,6 +423,25 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
     initForm();
   }, [isOpen, internship]);
 
+  // Handle auto-calculation of duration whenever dates change
+  // Matches the backend's Math.round(diffDays / 30) logic
+  useEffect(() => {
+    if (formData.startDate && formData.endDate) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+        const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+        const diffMonths = Math.round(diffDays / 30) || 0;
+
+        // Auto-update durationMonths if it differs and within valid range (1-6)
+        if (diffMonths > 0 && diffMonths <= 6 && parseInt(formData.durationMonths) !== diffMonths) {
+          setFormData(prev => ({ ...prev, durationMonths: diffMonths.toString() }));
+        }
+      }
+    }
+  }, [formData.startDate, formData.endDate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -530,13 +549,13 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          
+
           <section>
             <div className="flex items-center gap-2 mb-6">
               <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
               <h4 className="text-lg font-bold text-slate-800">Primary Details</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               {/* Student ID */}
               <div>
@@ -632,7 +651,7 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
               <div className="h-6 w-1.5 bg-indigo-500 rounded-full"></div>
               <h4 className="text-lg font-bold text-slate-800">Compensation & Role Details</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               {/* Paid Status & Stipend */}
               <div>
@@ -676,11 +695,11 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
                   name="description"
                   required
                   minLength="10"
-                  maxLength="500"
+                  maxLength="300"
                   value={formData.description}
                   onChange={handleChange}
                   rows="3"
-                  placeholder="Describe your responsibilities and achievements..."
+                  placeholder="Describe your responsibilities and achievements (Max 300 chars)..."
                   className={inputClass}
                 ></textarea>
               </div>
@@ -865,24 +884,9 @@ export default function AdminInternship() {
   };
 
   const handleSaveInternship = (updatedItem) => {
-    if (internshipToEdit) {
-      // Local update for edits
-      setInternships((prev) =>
-        prev.map((i) =>
-          i._id === updatedItem._id
-            ? {
-                ...updatedItem,
-                studentName: i.studentName || updatedItem.studentName,
-                studentID: i.studentID || updatedItem.studentID,
-                studentYear: i.studentYear || updatedItem.studentYear,
-              }
-            : i
-        )
-      );
-    } else {
-      // For new records, refetch to maintain sorting/pagination
-      fetchInternships(currentPage);
-    }
+    // ALWAYS refetch to ensure all populated fields (studentName, studentID, etc.)
+    // are updated correctly on the view cards from the backend response.
+    fetchInternships(currentPage);
   };
 
   const handleDelete = async (id) => {
@@ -933,8 +937,8 @@ export default function AdminInternship() {
           <div className="flex flex-wrap gap-3 w-full md:w-auto md:ml-auto">
             <button
               onClick={() => {
-                setAppliedFilters({
-                  search: searchQuery || undefined,
+                const sanitizedFilters = {
+                  search: searchQuery.trim() || undefined,
                   year: filterYear || undefined,
                   division: filterDivision || undefined,
                   isPaid: filterIsPaid || undefined,
@@ -942,7 +946,12 @@ export default function AdminInternship() {
                   startDateTo: startDateTo || undefined,
                   endDateFrom: endDateFrom || undefined,
                   endDateTo: endDateTo || undefined,
-                });
+                };
+                // Remove empty keys
+                Object.keys(sanitizedFilters).forEach(key =>
+                  (sanitizedFilters[key] === undefined || sanitizedFilters[key] === "") && delete sanitizedFilters[key]
+                );
+                setAppliedFilters(sanitizedFilters);
                 setCurrentPage(1);
               }}
               className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
@@ -957,14 +966,21 @@ export default function AdminInternship() {
               className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition-colors shadow-sm text-center">
               + Add
             </button>
-            <button onClick={handleExport}
-              className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Export
-            </button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2 flex-1 sm:flex-none">
+              <button onClick={handleExport}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export
+              </button>
+              <div className="text-[11px] text-slate-600 leading-tight">
+                <span className="font-semibold text-slate-800 block mb-0.5">How to export:</span>
+                1. Click <span className="font-semibold text-blue-600">Find</span> to apply filters.<br />
+                2. Click <span className="font-semibold text-emerald-600">Export</span> to download the data.
+              </div>
+            </div>
           </div>
         </div>
 

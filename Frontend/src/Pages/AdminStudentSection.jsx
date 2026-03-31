@@ -871,9 +871,9 @@ export default function AdminStudentSection() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Size Validation (500KB)
-    if (file.size > 500 * 1024) {
-      toast.error("Excel file size exceeds 500KB limit!");
+    // Size Validation (1MB - matches backend)
+    if (file.size > 1024 * 1024) {
+      toast.error("Excel file size exceeds 1MB limit!");
       e.target.value = "";
       return;
     }
@@ -893,7 +893,7 @@ export default function AdminStudentSection() {
       e.target.value = "";
     } catch (err) {
       console.error("Import Student IDs error:", err);
-      toast.error(err.response?.data?.message || "Failed to import Student IDs. Check the file has a 'studentID' column.");
+      toast.error(err.response?.data?.message || "Failed to import Student IDs. Check the file has 'studentID' and 'email' columns.");
     } finally {
       setImportingStudentIDs(false);
     }
@@ -1095,25 +1095,33 @@ export default function AdminStudentSection() {
 
             {/* Action Buttons Group */}
             <div className="flex flex-wrap gap-3">
-              {/* Export Button */}
-              <button
-                onClick={handleExport}
-                disabled={exporting || students.length === 0}
-                className="px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {exporting ? (
-                  <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Exporting... </>
-                ) : (
-                  <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Export </>
-                )}
-              </button>
+              {/* Export Button with inline instructions */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2">
+                <button
+                  onClick={handleExport}
+                  disabled={exporting || students.length === 0}
+                  className="px-4 py-2.5 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
+                >
+                  {exporting ? (
+                    <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Exporting... </>
+                  ) : (
+                    <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Export </>
+                  )}
+                </button>
+
+                <div className="text-[11px] text-slate-600 leading-tight">
+                  <span className="font-semibold text-slate-800 block mb-0.5">How to export:</span>
+                  1. Click <span className="font-semibold text-blue-600">Find Students</span> to apply filters.<br />
+                  2. Click <span className="font-semibold text-emerald-600">Export</span> to download the data.
+                </div>
+              </div>
 
 
               {/* Import Student IDs Button — new auth flow */}
               <button
                 onClick={handleImportStudentIDsClick}
                 disabled={importingStudentIDs}
-                title="Upload an Excel file with a single 'studentID' column to pre-register students for self-signup"
+                title="Upload an Excel file with 'studentID' and 'email' columns to pre-register students for self-signup"
                 className="px-4 py-2.5 rounded-lg bg-orange-600 text-white text-sm font-semibold hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {importingStudentIDs ? (
@@ -1124,7 +1132,7 @@ export default function AdminStudentSection() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                       Import Student IDs
                     </div>
-                    <span className="text-[9px] text-white/90 font-bold italic mt-0.5 leading-none">* Max 500KB, Excel only</span>
+                    <span className="text-[9px] text-white/90 font-bold italic mt-0.5 leading-none">* Max 1MB, Excel only (Cols: studentID, email)</span>
                   </div>
                 )}
               </button>

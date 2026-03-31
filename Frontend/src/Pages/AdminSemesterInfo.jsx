@@ -512,14 +512,14 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          
+
           {/* Basic Info */}
           <section>
             <div className="flex items-center gap-2 mb-6">
               <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
               <h4 className="text-lg font-bold text-slate-800">Basic Info</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               <div>
                 <label className={labelClass}>Student ID *</label>
@@ -790,7 +790,7 @@ export default function AdminSemesterInfo() {
 
       const fullRecords = semRes.data || [];
       let matchingRecord = fullRecords.find(r => r._id === record._id);
-      
+
       if (matchingRecord) {
         // Ensure the readable studentID is available at the top level for the form
         matchingRecord.studentID = studentRes.data?.studentID;
@@ -1060,15 +1060,22 @@ export default function AdminSemesterInfo() {
             )}
           </div>
 
-          <button
-            onClick={handleExport}
-            className="px-6 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm ml-auto flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Export to Excel
-          </button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2 ml-auto">
+            <button
+              onClick={handleExport}
+              className="px-6 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export to Excel
+            </button>
+            <div className="text-[11px] text-slate-600 leading-tight">
+              <span className="font-semibold text-slate-800 block mb-0.5">How to export:</span>
+              1. Click <span className="font-semibold text-blue-600">Find Records</span> to apply filters.<br />
+              2. Click <span className="font-semibold text-green-600">Export</span> to download the data.
+            </div>
+          </div>
           <button
             onClick={() => { setRecordToEdit(null); setIsFormModalOpen(true); }}
             className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center">
