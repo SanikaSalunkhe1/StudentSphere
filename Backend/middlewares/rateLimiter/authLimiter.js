@@ -1,7 +1,7 @@
 // add rate limiting for auth later on
 const rateLimit = require("express-rate-limit");
 
-const isDev = true;
+const isDev = process.env.NODE_ENV !== "production";
 
 const keyGenIP = (req) => {
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
@@ -10,7 +10,7 @@ const keyGenIP = (req) => {
 
 const keyGenEmail = (req) => {
     const ip = keyGenIP(req);
-    const email = req.body?.email || 'no-email';
+    const email = req.body?.email?.toLowerCase() || 'no-email';
     return `${ip}-${email}`;
 };
 
@@ -36,7 +36,6 @@ const limiterDefaults = {
     standardHeaders: true,
     legacyHeaders: false,
     validate: {
-        xForwardedForHeader: false,
         keyGeneratorIpFallback: false,
     },
     skip: (req) => req.path === "/health" 
@@ -47,7 +46,7 @@ const signupLimiter = rateLimit({
     keyGenerator: keyGenEmail,
     windowMs: 15 * 60 * 1000, // 15 min
     max: isDev ? 50 : 5,
-    message: { success: false, message: "Too many auth attempts, please try again later." },
+    message: { success: false, message: "Too many auth attempts, please try again after 15 mins." },
     handler: makeHandler("signupLimiter"),
 });
 
@@ -58,6 +57,7 @@ const studentLoginLimiter = rateLimit({
     skipSuccessfulRequests: true,
     windowMs: 15 * 60 * 1000, // 15 min
     max: isDev ? 50 : 10,
+    message: { success: false, message: "Too many auth attempts, please try again after 15 mins." },
     handler: makeHandler("studentLoginLimiter"),
 });
 
@@ -66,8 +66,9 @@ const emailLoginLimiter = rateLimit({
     ...limiterDefaults,
     keyGenerator: keyGenEmail,
     skipSuccessfulRequests: true,
-    windowMs: 15 * 60 * 1000,
+    windowMs: 15 * 60 * 1000, //15 min
     max: isDev ? 50 : 10,
+    message: { success: false, message: "Too many auth attempts, please try again later after 15 mins." },
     handler: makeHandler("emailLoginLimiter"),
 });
 
@@ -99,6 +100,71 @@ const forgotPasswordLimiter = rateLimit({
     handler: makeHandler("forgotPasswordLimiter"),
 });
 
+
+// For Admin/Incharge Login (Strict)
+const adminLoginLimiter = rateLimit({
+    ...limiterDefaults,
+    keyGenerator: keyGenEmail,
+    skipSuccessfulRequests: true, // Only count failures
+    windowMs: 15 * 60 * 1000,     // 15 minutes
+    max: isDev ? 50 : 5,          // 5 attempts
+    message: { success: false, message: "Too many login attempts. Please try again in 15 mins." },
+    handler: makeHandler("adminLoginLimiter"),
+});
+
+// For Admin/Incharge Forgot Password (Very Strict)
+// We limit this by Email to prevent "Email Enumeration" or Spamming
+const adminForgotPassLimiter = rateLimit({
+    ...limiterDefaults,
+    keyGenerator: keyGenEmail,
+    windowMs: 60 * 60 * 1000,     // 1 hour
+    max: isDev ? 50 : 3,          // Only 3 emails per hour
+    message: { success: false, message: "Too many reset requests. Please check your inbox or try later." },
+    handler: makeHandler("adminForgotPassLimiter"),
+});
+
+// For Admin/Incharge Reset Password (Token based)
+const adminResetPassLimiter = rateLimit({
+    ...limiterDefaults,
+    keyGenerator: keyGenToken,
+    windowMs: 30 * 60 * 1000,     // 30 minutes
+    max: isDev ? 50 : 5,          // 5 attempts to get the new password right
+    message: { success: false, message: "Link expired or too many attempts." },
+    handler: makeHandler("adminResetPassLimiter"),
+});
+
+// For Admin/Incharge Login (Strict)
+const divisionInchargeLoginLimiter = rateLimit({
+    ...limiterDefaults,
+    keyGenerator: keyGenEmail,
+    skipSuccessfulRequests: true, // Only count failures
+    windowMs: 15 * 60 * 1000,     // 15 minutes
+    max: isDev ? 50 : 5,          // 5 attempts
+    message: { success: false, message: "Too many login attempts. Please try again in 15 mins." },
+    handler: makeHandler("divisionInchargeLoginLimiter"),
+});
+
+// For Admin/Incharge Forgot Password (Very Strict)
+// We limit this by Email to prevent "Email Enumeration" or Spamming
+const divisionInchargeForgotPassLimiter = rateLimit({
+    ...limiterDefaults,
+    keyGenerator: keyGenEmail,
+    windowMs: 60 * 60 * 1000,     // 1 hour
+    max: isDev ? 50 : 3,          // Only 3 emails per hour
+    message: { success: false, message: "Too many reset requests. Please check your inbox or try later." },
+    handler: makeHandler("divisionInchargeForgotPassLimiter"),
+});
+
+// For Admin/Incharge Reset Password (Token based)
+const divisionInchargeResetPassLimiter = rateLimit({
+    ...limiterDefaults,
+    keyGenerator: keyGenToken,
+    windowMs: 30 * 60 * 1000,     // 30 minutes
+    max: isDev ? 50 : 5,          // 5 attempts to get the new password right
+    message: { success: false, message: "Link expired or too many attempts." },
+    handler: makeHandler("divisionInchargeResetPassLimiter"),
+});
+
 module.exports = {
     signupLimiter,
     emailLoginLimiter,
@@ -106,4 +172,10 @@ module.exports = {
     emailVerificationLimiter,
     resetPasswordLimiter,
     forgotPasswordLimiter,
+    adminLoginLimiter,
+    adminForgotPassLimiter,
+    adminResetPassLimiter,
+    divisionInchargeLoginLimiter,
+    divisionInchargeForgotPassLimiter,
+    divisionInchargeResetPassLimiter,
 };

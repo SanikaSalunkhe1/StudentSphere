@@ -1,9 +1,29 @@
 const rateLimit = require("express-rate-limit");
 
-const keyGen = (req) => {
+const keyGen2 = (req) => {
     if (req.user?.id) return req.user.id.toString();
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
     return ip.startsWith('::ffff:') ? ip.slice(7) : ip;
+};
+const keyGen = (req) => {
+
+
+    if (req.user?.id) return `user-${req.user.id}`;
+
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    const cleanIP = ip.startsWith('::ffff:') ? ip.slice(7) : ip;
+
+    // For auth routes → differentiate users
+    if (req.originalUrl.startsWith("/api/auth")) {
+        const identifier =
+            req.body?.email ||
+            req.body?.studentID ||
+            "unknown";
+
+        return `${cleanIP}-${identifier}`;
+    }
+
+    return cleanIP;
 };
 
 const makeHandler = (limitName) => (req, res, next, options) => {
@@ -18,7 +38,6 @@ const limiterDefaults = {
     legacyHeaders: false,
     keyGenerator: keyGen,
     validate: { 
-        xForwardedForHeader: false,
         keyGeneratorIpFallback: false,
     },
     skip: (req) => req.path === "/health" 
