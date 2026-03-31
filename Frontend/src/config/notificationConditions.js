@@ -56,6 +56,47 @@ export const NOTIFICATION_CONDITIONS = {
       predicate: (record) => !!record?.isMahadbtFormSubmitted,
     },
   ],
+  activity: [
+    {
+      key: "activityGeneral",
+      label: "General Activity Notice",
+      templateSubject: "Extracurricular Activity Update",
+      templateMessage: "Please check your recent activity submission or upload missing details.",
+      predicate: () => true,
+    },
+  ],
+  achievement: [
+    {
+      key: "achievementGeneral",
+      label: "General Achievement Notice",
+      templateSubject: "Achievement Record Update",
+      templateMessage: "Please review your achievement records. Make sure proofs are uploaded correctly.",
+      predicate: () => true,
+    },
+  ],
+  seminfo: [
+    {
+      key: "attendanceDefaulter",
+      label: "Attendance Defaulter",
+      templateSubject: "Low Attendance Warning",
+      templateMessage: "Your attendance is dangerously low. Please report to your class coordinator immediately.",
+      predicate: (record) => record?.attendance < 75 || record?.isDefaulter,
+    },
+    {
+      key: "journalPending",
+      label: "Journal Pending",
+      templateSubject: "Journal Submission Pending",
+      templateMessage: "Your journal verification is still pending. Please submit it to your respective subject teachers.",
+      predicate: (record) => !record?.journalTaken,
+    },
+    {
+      key: "examFormPending",
+      label: "Exam Form Pending",
+      templateSubject: "Exam Form Not Filled",
+      templateMessage: "Your exam form is marked as not filled. Please fill it immediately to avoid penalties.",
+      predicate: (record) => !record?.examFormFilled,
+    },
+  ],
 };
 
 export const getConditionsByModule = (moduleKey) => {

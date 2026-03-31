@@ -6,13 +6,23 @@ import { notificationService } from "../../services/notificationService";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const getEmailFromRecord = (record, emailMap = {}) => {
-  const studentObj = record?.stuID;
-  const studentDbId =
-    typeof studentObj === "object" && studentObj?._id ? String(studentObj._id) : "";
-  const studentID =
-    typeof studentObj === "object" && studentObj?.studentID
-      ? String(studentObj.studentID)
-      : "";
+  const studentObj = record?.stuID || record?.student;
+  let studentDbId = "";
+
+  if (typeof studentObj === "object" && studentObj?._id) {
+    studentDbId = String(studentObj._id);
+  } else if (typeof studentObj === "string") {
+    studentDbId = String(studentObj);
+  } else if (record?._id && !record?.stuID && !record?.student) {
+    studentDbId = String(record._id); // In case record itself is a student document
+  }
+
+  let studentID = "";
+  if (typeof studentObj === "object" && studentObj?.studentID) {
+    studentID = String(studentObj.studentID);
+  } else if (record?.studentID) {
+    studentID = String(record.studentID);
+  }
 
   return (
     record?.studentEmail ||
@@ -186,7 +196,9 @@ export default function SendNotificationButton({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">Send Admission Notification</h3>
+              <h3 className="text-lg font-bold text-slate-900">
+                Send {moduleKey.charAt(0).toUpperCase() + moduleKey.slice(1)} Notification
+              </h3>
               <button onClick={closeModal} className="p-2 rounded-full hover:bg-slate-100">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
