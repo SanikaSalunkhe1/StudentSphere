@@ -43,8 +43,22 @@ app.use(
   })
 );
 
-app.use(helmet());
-
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: [
+          "'self'",
+          "https://studentsphere-okrf.onrender.com"
+        ],
+        imgSrc: ["'self'", "data:", "https:"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+      },
+    },
+  })
+);
 
 // Body Parsing
 app.use(express.json({ limit: "4mb" }));
