@@ -463,13 +463,13 @@ export default function StudentPlacement() {
     try {
       if (activeTab === "placement") {
         const formData = new FormData();
-        formData.append("companyName", placementData.companyName);
-        formData.append("role", placementData.role);
-        formData.append("placementType", placementData.placementType);
+        formData.append("companyName", placementData.companyName.trim());
+        formData.append("role", placementData.role.trim());
+        formData.append("placementType", placementData.placementType.trim());
         formData.append("package", placementData.package);
-        formData.append("placementYear", placementData.placementYear);
-        formData.append("passoutYear", placementData.passoutYear);
-        formData.append("joiningYear", placementData.joiningYear);
+        formData.append("placementYear", placementData.placementYear.trim());
+        formData.append("passoutYear", placementData.passoutYear.trim());
+        formData.append("joiningYear", placementData.joiningYear.trim());
         if (placementData.placementProof) {
           formData.append("placementProof", placementData.placementProof);
         }
@@ -484,8 +484,8 @@ export default function StudentPlacement() {
         await fetchPlacements();
       } else {
         const formData = new FormData();
-        formData.append("examName", higherStudiesData.examName);
-        formData.append("score", higherStudiesData.score);
+        formData.append("examName", higherStudiesData.examName.trim());
+        formData.append("score", String(higherStudiesData.score).trim());
         if (higherStudiesData.marksheet) {
           formData.append("marksheet", higherStudiesData.marksheet);
         }

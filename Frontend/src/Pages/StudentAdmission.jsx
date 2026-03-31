@@ -108,19 +108,19 @@ export default function StudentAdmission() {
 
       // Conditional Logic: Backend uses Joi.forbidden() for mutually exclusive fields
       if (!payload.isScholarshipApplied) {
-        payload.scholarshipNotAppliedReason = formData.scholarshipNotAppliedReason || "";
+        payload.scholarshipNotAppliedReason = formData.scholarshipNotAppliedReason?.trim() || "";
       }
 
       if (payload.isMahadbtFormSubmitted) {
-        payload.mahadbtFilledDate = formData.mahadbtFilledDate || undefined;
+        payload.mahadbtFilledDate = formData.mahadbtFilledDate?.trim() || undefined;
       } else {
-        payload.mahadbtNotFilledReason = formData.mahadbtNotFilledReason || "";
+        payload.mahadbtNotFilledReason = formData.mahadbtNotFilledReason?.trim() || "";
       }
 
       if (payload.hasMigrationCertificate) {
-        payload.migrationExpectedDate = formData.migrationExpectedDate || undefined;
+        payload.migrationExpectedDate = formData.migrationExpectedDate?.trim() || undefined;
       } else {
-        payload.migrationNotAvailableReason = formData.migrationNotAvailableReason || "";
+        payload.migrationNotAvailableReason = formData.migrationNotAvailableReason?.trim() || "";
       }
 
       // Cleanup undefined/empty strings that might trigger Joi errors on optional fields
