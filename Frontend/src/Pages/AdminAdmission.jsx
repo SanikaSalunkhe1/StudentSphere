@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { admissionService } from "../services/admissionService";
+import { studentService } from "../services/studentService";
 import { toast, Toaster } from "react-hot-toast";
 import Pagination from "../components/Common/Pagination";
+import SendNotificationButton from "../components/Common/SendNotificationButton";
 
 // ==================== COMPONENTS ====================
 
@@ -705,6 +707,8 @@ export default function AdminAdmission() {
   const [limit, setLimit] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [admissionEmailMap, setAdmissionEmailMap] = useState({});
+  const [emailCache, setEmailCache] = useState({});
 
   const [selectedAdmission, setSelectedAdmission] = useState(null); // For View
   const [editingAdmission, setEditingAdmission] = useState(null); // For Edit
@@ -758,7 +762,57 @@ export default function AdminAdmission() {
       const total = response.total || 0;
       const totalP = response.totalPages || 1;
 
+      // Admission list endpoint does not always include email in populated stuID.
+      // Resolve missing emails from student endpoint for current page records.
+      const studentRefs = data
+        .map((item) => ({
+          dbId:
+            typeof item?.stuID === "object" && item?.stuID?._id
+              ? String(item.stuID._id)
+              : "",
+          studentID:
+            typeof item?.stuID === "object" && item?.stuID?.studentID
+              ? String(item.stuID.studentID)
+              : "",
+          existingEmail:
+            item?.stuID?.email || item?.studentEmail || item?.email || "",
+        }))
+        .filter((ref) => ref.dbId);
+
+      const mapFromRecords = { ...emailCache };
+      studentRefs.forEach((ref) => {
+        if (ref.existingEmail) {
+          mapFromRecords[ref.dbId] = ref.existingEmail;
+          if (ref.studentID) mapFromRecords[ref.studentID] = ref.existingEmail;
+        }
+      });
+
+      const missingRefs = studentRefs.filter((ref) => !mapFromRecords[ref.dbId]);
+      let resolvedMap = { ...mapFromRecords };
+
+      if (missingRefs.length > 0) {
+        const uniqueMissing = Array.from(
+          new Map(missingRefs.map((ref) => [ref.dbId, ref])).values()
+        );
+        const results = await Promise.allSettled(
+          uniqueMissing.map((ref) => studentService.getSingleStudent(ref.dbId))
+        );
+
+        results.forEach((result, index) => {
+          if (result.status !== "fulfilled") return;
+          const student = result.value?.data;
+          const email = student?.email;
+          if (!email) return;
+
+          const ref = uniqueMissing[index];
+          resolvedMap[ref.dbId] = email;
+          if (ref.studentID) resolvedMap[ref.studentID] = email;
+        });
+      }
+
       setAdmissions(data);
+      setAdmissionEmailMap(resolvedMap);
+      setEmailCache((prev) => ({ ...prev, ...resolvedMap }));
       setTotalRecords(total);
       setTotalPages(totalP);
       if (page === 1) setCurrentPage(1);
@@ -772,6 +826,95 @@ export default function AdminAdmission() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getActiveAdmissionFilters = () => ({
+    search: searchQuery.trim() || undefined,
+    year: yearFilter || undefined,
+    status: statusFilter || undefined,
+    isScholarshipApplied:
+      scholarshipFilter !== "" ? scholarshipFilter === "true" : undefined,
+    isMahadbtFormSubmitted:
+      mahadbtFilter !== "" ? mahadbtFilter === "true" : undefined,
+    hasMigrationCertificate:
+      migrationFilter !== "" ? migrationFilter === "true" : undefined,
+  });
+
+  const loadAllFilteredAdmissionsForNotification = async () => {
+    const baseParams = getActiveAdmissionFilters();
+    const firstPageResponse = await admissionService.getAllAdmissions({
+      ...baseParams,
+      page: 1,
+      limit: 50,
+    });
+
+    const all = [...(firstPageResponse?.data || [])];
+    const pages = firstPageResponse?.totalPages || 1;
+
+    if (pages > 1) {
+      const rest = await Promise.all(
+        Array.from({ length: pages - 1 }, (_, idx) =>
+          admissionService.getAllAdmissions({
+            ...baseParams,
+            page: idx + 2,
+            limit: 50,
+          })
+        )
+      );
+
+      rest.forEach((res) => {
+        if (Array.isArray(res?.data)) all.push(...res.data);
+      });
+    }
+
+    return all;
+  };
+
+  const buildEmailMapForAdmissions = async (records = []) => {
+    const studentRefs = records
+      .map((item) => ({
+        dbId:
+          typeof item?.stuID === "object" && item?.stuID?._id
+            ? String(item.stuID._id)
+            : "",
+        studentID:
+          typeof item?.stuID === "object" && item?.stuID?.studentID
+            ? String(item.stuID.studentID)
+            : "",
+        existingEmail: item?.stuID?.email || item?.studentEmail || item?.email || "",
+      }))
+      .filter((ref) => ref.dbId);
+
+    const resolved = { ...emailCache };
+    studentRefs.forEach((ref) => {
+      if (ref.existingEmail) {
+        resolved[ref.dbId] = ref.existingEmail;
+        if (ref.studentID) resolved[ref.studentID] = ref.existingEmail;
+      }
+    });
+
+    const missing = studentRefs.filter((ref) => !resolved[ref.dbId]);
+    if (missing.length > 0) {
+      const uniqueMissing = Array.from(
+        new Map(missing.map((ref) => [ref.dbId, ref])).values()
+      );
+      const results = await Promise.allSettled(
+        uniqueMissing.map((ref) => studentService.getSingleStudent(ref.dbId))
+      );
+
+      results.forEach((result, index) => {
+        if (result.status !== "fulfilled") return;
+        const student = result.value?.data;
+        const email = student?.email;
+        if (!email) return;
+        const ref = uniqueMissing[index];
+        resolved[ref.dbId] = email;
+        if (ref.studentID) resolved[ref.studentID] = email;
+      });
+    }
+
+    setEmailCache((prev) => ({ ...prev, ...resolved }));
+    return resolved;
   };
 
   // HANDLERS
@@ -947,6 +1090,18 @@ export default function AdminAdmission() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
             Add
           </button>
+
+          <SendNotificationButton
+            moduleKey="admission"
+            records={admissions}
+            emailMap={admissionEmailMap}
+            loadRecords={loadAllFilteredAdmissionsForNotification}
+            resolveEmailMap={buildEmailMapForAdmissions}
+            disabled={loading || admissions.length === 0}
+            onSent={(recipientCount) =>
+              toast.success(`Notification sent to ${recipientCount} students.`)
+            }
+          />
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2 flex-1 sm:flex-none">
             <button
