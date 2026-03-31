@@ -5,7 +5,7 @@ const connectDB = require("./config/db");
 require("dotenv").config();
 const errorHandler = require("./middlewares/errorHandler");
 const {generalLimiter} = require("./middlewares/rateLimiter/rateLimiter");
-
+const helmet = require("helmet");
 // ✅ ADD THIS DEBUG CHECK
 // console.log("🔍 ENVIRONMENT VARIABLES CHECK:");
 // console.log("EMAIL_USER loaded:", process.env.EMAIL_USER ? "✅ YES" : "❌ NO");
@@ -22,7 +22,7 @@ const {generalLimiter} = require("./middlewares/rateLimiter/rateLimiter");
 const PORT = process.env.PORT || 5000;
 const app = express();
 app.set("trust proxy", true); // because render sits behind a reverse proxy - so all IPs might turn out to be same - req.ip maybe same - hence rate limiting might treat all users as same IP. - to avoid this trust proxy needs to be set
-
+app.use(helmet());
 connectDB();
 
 // ✅ FIXED CORS - More permissive for dev
@@ -30,7 +30,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://student-website-seven.vercel.app", "https://student-website-frontend.vercel.app",
+      "https://student-website-seven.vercel.app", "https://student-website-frontend.vercel.app","https://computer-department-student-sphere.vercel.app",
       process.env.FRONTEND_URL // Support env-based URL
     ].filter(Boolean), // Remove undefined/null if env var is missing
     credentials: true,
