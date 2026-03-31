@@ -6,13 +6,23 @@ import { notificationService } from "../../services/notificationService";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const getEmailFromRecord = (record, emailMap = {}) => {
-  const studentObj = record?.stuID;
-  const studentDbId =
-    typeof studentObj === "object" && studentObj?._id ? String(studentObj._id) : "";
-  const studentID =
-    typeof studentObj === "object" && studentObj?.studentID
-      ? String(studentObj.studentID)
-      : "";
+  const studentObj = record?.stuID || record?.student;
+  let studentDbId = "";
+
+  if (typeof studentObj === "object" && studentObj?._id) {
+    studentDbId = String(studentObj._id);
+  } else if (typeof studentObj === "string") {
+    studentDbId = String(studentObj);
+  } else if (record?._id && !record?.stuID && !record?.student) {
+    studentDbId = String(record._id); // In case record itself is a student document
+  }
+
+  let studentID = "";
+  if (typeof studentObj === "object" && studentObj?.studentID) {
+    studentID = String(studentObj.studentID);
+  } else if (record?.studentID) {
+    studentID = String(record.studentID);
+  }
 
   return (
     record?.studentEmail ||
@@ -159,11 +169,10 @@ export default function SendNotificationButton({
       <button
         onClick={openModalAndPrepareData}
         disabled={disabled}
-        className={`flex-1 sm:flex-none px-6 py-3 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
-          disabled
+        className={`flex-1 sm:flex-none px-6 py-3 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${disabled
             ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
             : "bg-indigo-600 text-white hover:bg-indigo-700"
-        }`}
+          }`}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -186,7 +195,7 @@ export default function SendNotificationButton({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">Send Notification</h3>
+              <h3 className="text-lg font-bold text-slate-900">Send Admission Notification</h3>
               <button onClick={closeModal} className="p-2 rounded-full hover:bg-slate-100">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -263,11 +272,10 @@ export default function SendNotificationButton({
               <button
                 onClick={handleSend}
                 disabled={sending || loadingScope}
-                className={`px-5 py-2.5 rounded-lg text-sm font-semibold text-white ${
-                  sending || loadingScope
+                className={`px-5 py-2.5 rounded-lg text-sm font-semibold text-white ${sending || loadingScope
                     ? "bg-indigo-300 cursor-not-allowed"
                     : "bg-indigo-600 hover:bg-indigo-700"
-                }`}
+                  }`}
               >
                 {sending ? "Sending..." : "Send"}
               </button>

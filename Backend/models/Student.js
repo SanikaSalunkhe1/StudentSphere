@@ -14,6 +14,9 @@ const studentSchema = new mongoose.Schema({
 
     email: { type: String, unique: true, sparse : true },
     password: { type: String },
+    
+    // Flag for admin/division incharge heatmap feature
+    isAtRisk: { type: Boolean, default: false },
 
 
     // new fields for email verification

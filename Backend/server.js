@@ -92,6 +92,7 @@ app.use("/api/student", require("./routes/StudentRoutes"));
 app.use("/api/divisionIncharge", require("./routes/divisionInchargeRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/reports", require("./routes/reportRoutes"));
+app.use("/api/heatmap", require("./routes/heatmapRoutes"));
 app.use("/api/emails", require("./routes/sendBulkEmailRoutes"));
 // after all routes
 app.use(errorHandler);

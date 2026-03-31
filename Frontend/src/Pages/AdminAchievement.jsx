@@ -3,6 +3,7 @@ import { achievementService } from "../services/achievementService";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
 import Pagination from "../components/Common/Pagination";
+import SendNotificationButton from "../components/Common/SendNotificationButton";
 
 // Achievement Card Component - COMPACT & BEAUTIFUL
 function AchievementCard({ achievement, onView, onDelete, onEdit, isDeleting }) {
@@ -798,6 +799,8 @@ export default function AdminAchievements() {
 
   // Applied Filters State (Snapshot for WYSIWYG)
   const [appliedFilters, setAppliedFilters] = useState({});
+  const [achievementEmailMap, setAchievementEmailMap] = useState({});
+  const [emailCache, setEmailCache] = useState({});
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -830,7 +833,42 @@ export default function AdminAchievements() {
       const total = response.total || 0;
       const totalP = response.totalPages || 1;
 
+      const studentRefs = data
+        .map((item) => ({
+          dbId: typeof item?.stuID === "object" && item?.stuID?._id ? String(item.stuID._id) : "",
+          studentID: typeof item?.stuID === "object" && item?.stuID?.studentID ? String(item.stuID.studentID) : "",
+          existingEmail: item?.stuID?.email || item?.studentEmail || item?.email || item?.student?.email || "",
+        }))
+        .filter((ref) => ref.dbId);
+
+      const mapFromRecords = { ...emailCache };
+      studentRefs.forEach((ref) => {
+        if (ref.existingEmail) {
+          mapFromRecords[ref.dbId] = ref.existingEmail;
+          if (ref.studentID) mapFromRecords[ref.studentID] = ref.existingEmail;
+        }
+      });
+
+      const missingRefs = studentRefs.filter((ref) => !mapFromRecords[ref.dbId]);
+      let resolvedMap = { ...mapFromRecords };
+
+      if (missingRefs.length > 0) {
+        const uniqueMissing = Array.from(new Map(missingRefs.map((ref) => [ref.dbId, ref])).values());
+        const results = await Promise.allSettled(uniqueMissing.map((ref) => studentService.getSingleStudent(ref.dbId)));
+        results.forEach((result, index) => {
+          if (result.status !== "fulfilled") return;
+          const student = result.value?.data;
+          const email = student?.email;
+          if (!email) return;
+          const ref = uniqueMissing[index];
+          resolvedMap[ref.dbId] = email;
+          if (ref.studentID) resolvedMap[ref.studentID] = email;
+        });
+      }
+
       setAchievements(data);
+      setAchievementEmailMap(resolvedMap);
+      setEmailCache((prev) => ({ ...prev, ...resolvedMap }));
       setTotalRecords(total);
       setTotalPages(totalP);
       if (page === 1) setCurrentPage(1);
@@ -842,6 +880,66 @@ export default function AdminAchievements() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadAllFilteredAchievementsForNotification = async () => {
+    const firstPageResponse = await achievementService.getAllAchievements({
+      ...appliedFilters,
+      page: 1,
+      limit: 50,
+    });
+    const all = [...(firstPageResponse?.data || [])];
+    const pages = firstPageResponse?.totalPages || 1;
+    if (pages > 1) {
+      const rest = await Promise.all(
+        Array.from({ length: pages - 1 }, (_, idx) =>
+          achievementService.getAllAchievements({ ...appliedFilters, page: idx + 2, limit: 50 })
+        )
+      );
+      rest.forEach((res) => { if (Array.isArray(res?.data)) all.push(...res.data); });
+    }
+    return all;
+  };
+
+  const buildEmailMapForAchievements = async (records = []) => {
+    const studentRefs = records
+      .map((item) => {
+        const studentObj = item?.student || item?.stuID;
+        return {
+          dbId: typeof studentObj === "object" && studentObj?._id ? String(studentObj._id) : "",
+          studentID: typeof studentObj === "object" && studentObj?.studentID ? String(studentObj.studentID) : "",
+          existingEmail: studentObj?.email || item?.studentEmail || item?.email || "",
+        };
+      })
+      .filter((ref) => ref.dbId);
+
+    const resolved = { ...emailCache };
+    studentRefs.forEach((ref) => {
+      if (ref.existingEmail) {
+        resolved[ref.dbId] = ref.existingEmail;
+        if (ref.studentID) resolved[ref.studentID] = ref.existingEmail;
+      }
+    });
+
+    const missing = studentRefs.filter((ref) => !resolved[ref.dbId]);
+    if (missing.length > 0) {
+      const uniqueMissing = Array.from(new Map(missing.map((ref) => [ref.dbId, ref])).values());
+      const results = await Promise.allSettled(
+        uniqueMissing.map((ref) => studentService.getSingleStudent(ref.dbId))
+      );
+      results.forEach((result, index) => {
+        if (result.status !== "fulfilled") return;
+        const student = result.value?.data;
+        const email = student?.email;
+        if (!email) return;
+        const ref = uniqueMissing[index];
+        resolved[ref.dbId] = email;
+        if (ref.studentID) resolved[ref.studentID] = email;
+      });
+    }
+
+    setEmailCache((prev) => ({ ...prev, ...resolved }));
+    return resolved;
   };
 
   const handleExport = async () => {
@@ -1045,7 +1143,18 @@ export default function AdminAchievements() {
             )}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            <SendNotificationButton
+              moduleKey="achievement"
+              records={achievements}
+              emailMap={achievementEmailMap}
+              loadRecords={loadAllFilteredAchievementsForNotification}
+              resolveEmailMap={buildEmailMapForAchievements}
+              disabled={loading || achievements.length === 0}
+              onSent={(recipientCount) =>
+                toast.success(`Notification sent to ${recipientCount} students.`)
+              }
+            />
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2">
               <button
                 onClick={handleExport}
