@@ -44,7 +44,7 @@ function SemInfoCard({ record, onEdit, onDelete, isDeleting }) {
 
                 {/* Score */}
                 <div className="mb-3 pb-3 border-b border-slate-100">
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Marks</p>
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">End Sem Marks</p>
                     <p className="text-sm font-bold text-slate-800">
                         {totalScore} / {totalOutOf}
                         <span className="ml-1 text-xs font-medium text-slate-500">({percentage}%)</span>
@@ -99,8 +99,8 @@ function SemInfoCard({ record, onEdit, onDelete, isDeleting }) {
                         onClick={() => onDelete(record._id)}
                         disabled={isDeleting}
                         className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${isDeleting
-                                ? "bg-red-200 text-red-500 cursor-not-allowed"
-                                : "bg-red-50 text-red-700 hover:bg-red-100"
+                            ? "bg-red-200 text-red-500 cursor-not-allowed"
+                            : "bg-red-50 text-red-700 hover:bg-red-100"
                             }`}
                     >
                         {isDeleting ? "Deleting..." : "Delete"}
@@ -222,21 +222,44 @@ export default function StudentSemesterInfo() {
         e.preventDefault();
         setFormLoading(true);
 
-        if (!formData.semester) { toast.error("Please select a semester"); setFormLoading(false); return; }
-        if (formData.attendance === "") { toast.error("Please enter attendance"); setFormLoading(false); return; }
-        if (formData.marks.some((m) => !m.subject || m.score === "" || m.outOf === "")) {
-            toast.error("Please fill all mark fields"); setFormLoading(false); return;
+        if (!formData.semester) {
+            toast.error("Please select a semester");
+            setFormLoading(false);
+            return;
+        }
+        if (formData.attendance === "") {
+            toast.error("Please enter attendance");
+            setFormLoading(false);
+            return;
+        }
+
+        // Filter out empty mark rows.
+        const filteredMarks = formData.marks
+            .filter(m => m.subject.trim() || m.score.toString().trim() || m.outOf.toString().trim())
+            .map(m => ({
+                subject: m.subject.trim(),
+                score: Number(m.score),
+                outOf: Number(m.outOf),
+            }));
+
+        // Validate that if a mark row was started, it is complete (matching backend requirements)
+        const hasIncompleteMark = formData.marks.some(m => {
+            const hasAny = m.subject.trim() || m.score.toString().trim() || m.outOf.toString().trim();
+            const hasAll = m.subject.trim() && m.score.toString().trim() !== "" && m.outOf.toString().trim() !== "";
+            return hasAny && !hasAll;
+        });
+
+        if (hasIncompleteMark) {
+            toast.error("Please complete all fields for each subject or clear the row.");
+            setFormLoading(false);
+            return;
         }
 
         const payload = {
             semester: Number(formData.semester),
             attendance: Number(formData.attendance),
             kts: formData.kts,
-            marks: formData.marks.map((m) => ({
-                subject: m.subject,
-                score: Number(m.score),
-                outOf: Number(m.outOf),
-            })),
+            marks: filteredMarks,
             journalTaken: formData.journalTaken,
             examFormFilled: formData.examFormFilled,
         };
@@ -246,14 +269,14 @@ export default function StudentSemesterInfo() {
                 await semInfoService.updateSemInfo(editingId, payload);
                 toast.success("Semester info updated!");
             } else {
-                // Try sending everything first
+                // Workaround: Backend currently ignores journal/exam fields on create.
+                // If they are checked, follow up with an update.
                 const response = await semInfoService.addSemInfo(payload);
                 const newRecord = response.data || response;
-                
-                // If the backend creation ignored the fields (which it might based on validators),
-                // we'll follow up with an update to be sure.
-                if (newRecord._id && (payload.journalTaken || payload.examFormFilled)) {
-                    await semInfoService.updateSemInfo(newRecord._id, {
+
+                const createdId = newRecord?.data?._id || newRecord?._id;
+                if (createdId && (payload.journalTaken || payload.examFormFilled)) {
+                    await semInfoService.updateSemInfo(createdId, {
                         journalTaken: payload.journalTaken,
                         examFormFilled: payload.examFormFilled
                     });
@@ -264,39 +287,11 @@ export default function StudentSemesterInfo() {
             await fetchRecords();
             setTimeout(() => setView("list"), 500);
         } catch (err) {
-            // Fallback: If creation fails because of unknown fields in Joi, try again without them
-            if (!editingId && err.response?.status === 400) {
-                try {
-                    const { journalTaken, examFormFilled, ...basicPayload } = payload;
-                    const response = await semInfoService.addSemInfo(basicPayload);
-                    const newRecord = response.data || response;
-                    
-                    if (newRecord._id) {
-                        await semInfoService.updateSemInfo(newRecord._id, {
-                            journalTaken,
-                            examFormFilled
-                        });
-                        toast.success("Semester info added!");
-                        resetForm();
-                        await fetchRecords();
-                        setTimeout(() => setView("list"), 500);
-                        return;
-                    }
-                } catch (retryErr) {
-                    const resData = retryErr.response?.data;
-                    if (resData?.errors && Array.isArray(resData.errors)) {
-                        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
-                    } else {
-                        toast.error(resData?.message || "Failed to save");
-                    }
-                }
+            const resData = err.response?.data;
+            if (resData?.errors && Array.isArray(resData.errors)) {
+                resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
             } else {
-                const resData = err.response?.data;
-                if (resData?.errors && Array.isArray(resData.errors)) {
-                    resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
-                } else {
-                    toast.error(resData?.message || "Failed to save");
-                }
+                toast.error(resData?.message || "Failed to save");
             }
             console.error(err);
         } finally {
@@ -359,7 +354,8 @@ export default function StudentSemesterInfo() {
                                         <select
                                             value={formData.semester}
                                             onChange={(e) => setFormData((p) => ({ ...p, semester: e.target.value }))}
-                                            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                                            disabled={!!editingId}
+                                            className={`w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${editingId ? "opacity-60 cursor-not-allowed bg-slate-50" : ""}`}
                                             required
                                         >
                                             <option value="">Select Semester</option>
@@ -367,6 +363,11 @@ export default function StudentSemesterInfo() {
                                                 <option key={s} value={s}>Semester {s}</option>
                                             ))}
                                         </select>
+                                        {editingId && (
+                                            <p className="text-[10px] text-slate-500 mt-1 italic">
+                                                * Semester cannot be changed once created.
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -460,13 +461,14 @@ export default function StudentSemesterInfo() {
                             {/* ── Marks ── */}
                             <div>
                                 <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-4 pb-3 border-b-2 border-blue-500">
-                                    Subject Marks <span className="text-red-500">*</span>
+                                    End Semester Marks
+                                    <span className="text-slate-400 text-xs font-normal ml-2 uppercase">(Optional)</span>
                                 </h2>
                                 <div className="space-y-3">
                                     {/* Header */}
                                     <div className="hidden sm:grid sm:grid-cols-[2fr_1fr_1fr_auto] gap-3 px-1">
                                         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Subject</span>
-                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Score</span>
+                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">End Sem Score</span>
                                         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Out Of</span>
                                         <span />
                                     </div>
@@ -478,16 +480,14 @@ export default function StudentSemesterInfo() {
                                                 onChange={(e) => handleMarkChange(idx, "subject", e.target.value)}
                                                 placeholder="Subject name"
                                                 className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                required
                                             />
                                             <input
                                                 type="number"
                                                 value={mark.score}
                                                 onChange={(e) => handleMarkChange(idx, "score", e.target.value)}
-                                                placeholder="Score"
+                                                placeholder="End Sem"
                                                 min="0"
                                                 className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                required
                                             />
                                             <input
                                                 type="number"
@@ -496,7 +496,6 @@ export default function StudentSemesterInfo() {
                                                 placeholder="Out of"
                                                 min="1"
                                                 className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                required
                                             />
                                             <button
                                                 type="button"

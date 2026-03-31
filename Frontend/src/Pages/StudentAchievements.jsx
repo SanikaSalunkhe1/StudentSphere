@@ -293,16 +293,16 @@ export default function StudentAchievements() {
     try {
       const data = new FormData();
       data.append("category", formData.category);
-      data.append("title", formData.title);
+      data.append("title", formData.title.trim());
 
       // Handle injecting the "Other" specification into the description safely for regex
-      let finalDescription = formData.description;
+      let finalDescription = formData.description.trim();
       if (formData.category === "Other" && formData.otherCategory.trim()) {
         finalDescription = `Category ${formData.otherCategory.trim()}, ${finalDescription}`;
       }
       data.append("description", finalDescription);
 
-      data.append("issuedBy", formData.issuedBy);
+      data.append("issuedBy", formData.issuedBy.trim());
       data.append("achievementType", formData.achievementType);
 
       // Send as simple keys, handled by backend

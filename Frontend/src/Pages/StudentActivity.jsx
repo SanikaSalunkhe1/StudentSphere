@@ -233,10 +233,14 @@ export default function StudentActivity() {
     try {
       const data = new FormData();
       // Type is handled by backend (forced to Committee)
-      data.append("title", formData.title);
-      data.append("description", formData.description);
-      data.append("date[from]", formData.dateFrom);
-      data.append("date[to]", formData.dateTo);
+      data.append("title", formData.title.trim());
+      data.append("description", formData.description.trim());
+
+      // Send date as stringified JSON so Joi parses it correctly with convert: true
+      data.append("date", JSON.stringify({
+        from: formData.dateFrom,
+        to: formData.dateTo
+      }));
 
       if (certificate) {
         data.append("certificate", certificate);
@@ -314,12 +318,12 @@ export default function StudentActivity() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-            {editingId ? "Edit Activity" : "Add New Activity"}
+            {editingId ? "Edit Curricular Activity" : "Add New Curricular Activity"}
           </h1>
           <p className="text-slate-600 mt-1 text-sm sm:text-base">
             {editingId
-              ? "Update your activity details"
-              : "Record your activities"}
+              ? "Update your curricular activity details"
+              : "Record your curricular activities"}
           </p>
         </div>
 
@@ -515,8 +519,8 @@ export default function StudentActivity() {
                 {formLoading
                   ? "Submitting..."
                   : editingId
-                    ? "Update Activity"
-                    : "Submit Activity"}
+                    ? "Update Curricular Activity"
+                    : "Submit Curricular Activity"}
               </button>
             </div>
           </div>
@@ -534,7 +538,7 @@ export default function StudentActivity() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-            My Activities
+            My Curricular Activities
           </h1>
           <p className="text-slate-600 mt-1 text-sm sm:text-base">
             Showing{" "}
@@ -550,7 +554,7 @@ export default function StudentActivity() {
           onClick={openFormForAdd}
           className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto"
         >
-          + Add Activity
+          + Add Curricular Activity
         </button>
       </div>
 

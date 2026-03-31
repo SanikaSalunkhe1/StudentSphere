@@ -156,18 +156,23 @@ export default function StudentInternship() {
     fetchInternships();
   }, []);
 
-  // Auto-calculate duration
+  // Auto-calculate duration to match backend Joi exact validation
   useEffect(() => {
     if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
-      
+
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
-        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-        // If the day of month of end date is less than start date, it's not a full month
-        // but for internship usually rounded up or strict diff is fine. 
-        // Let's use a simple month diff.
-        setFormData(prev => ({ ...prev, durationMonths: Math.max(1, months).toString() }));
+        // Backend math: Math.round(diffDays / 30) || 0
+        const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+        const diffMonths = Math.round(diffDays / 30) || 0;
+
+        setFormData((prev) => ({
+          ...prev,
+          // Automatically cap to valid minimums on the form if desired, 
+          // but strict match requires sending exactly the calculated months
+          durationMonths: diffMonths.toString()
+        }));
       }
     }
   }, [formData.startDate, formData.endDate]);
@@ -195,7 +200,7 @@ export default function StudentInternship() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === "stipend") {
       // Remove commas before saving to state
       const rawValue = value.replace(/,/g, "");
@@ -341,16 +346,16 @@ export default function StudentInternship() {
     }
     try {
       const data = new FormData();
-      data.append("companyName", formData.companyName);
-      data.append("role", formData.role);
+      data.append("companyName", formData.companyName.trim());
+      data.append("role", formData.role.trim());
       data.append("startDate", formData.startDate);
       data.append("endDate", formData.endDate);
       data.append("durationMonths", formData.durationMonths);
       data.append("isPaid", formData.isPaid === "paid");
       if (formData.isPaid === "paid") {
-        data.append("stipend", formData.stipend);
+        data.append("stipend", String(formData.stipend).trim());
       }
-      data.append("description", formData.description);
+      data.append("description", formData.description.trim());
       if (photoProof) data.append("photoProof", photoProof);
       if (internshipReport) data.append("internshipReport", internshipReport);
 
@@ -509,7 +514,7 @@ export default function StudentInternship() {
                       name="durationMonths"
                       value={formData.durationMonths}
                       onChange={handleChange}
-                      placeholder="1-12"
+                      placeholder="1-6  "
                       min="1"
                       max="6"
                       className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
@@ -747,9 +752,9 @@ export default function StudentInternship() {
   const filteredInternships = internships.filter((internship) => {
     const matchesSearch = searchQuery
       ? (internship.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         internship.role?.toLowerCase().includes(searchQuery.toLowerCase()))
+        internship.role?.toLowerCase().includes(searchQuery.toLowerCase()))
       : true;
-    
+
     const matchesPaid = filterIsPaid
       ? (filterIsPaid === "paid" ? internship.stipendInfo?.isPaid : !internship.stipendInfo?.isPaid)
       : true;

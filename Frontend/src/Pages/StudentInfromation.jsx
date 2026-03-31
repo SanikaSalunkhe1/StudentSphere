@@ -80,13 +80,13 @@ export default function StudentInformation() {
           if (data && data.address) {
             const city = data.address.city || data.address.town || data.address.village || data.address.suburb || "";
             const pincode = data.address.postcode || "";
-            
+
             setFormData((prev) => ({
               ...prev,
               currentCity: city,
               pincode: pincode || prev.pincode, // Keep existing if new is empty
             }));
-            
+
             if (city) {
               toast.success(`Location fetched: ${city}`);
             }
@@ -206,7 +206,7 @@ export default function StudentInformation() {
 
       // Append all text fields
       Object.keys(formData).forEach(key => {
-        data.append(key, formData[key]);
+        data.append(key, typeof formData[key] === 'string' ? formData[key].trim() : formData[key]);
       });
 
       // Append photo if selected
@@ -523,7 +523,7 @@ export default function StudentInformation() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
                   <h3 className="text-md font-bold text-orange-900">Current Address</h3>
-                  <button 
+                  <button
                     type="button"
                     onClick={fetchCurrentLocation}
                     disabled={geoLoading}
@@ -551,7 +551,7 @@ export default function StudentInformation() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
                   <h3 className="text-md font-bold text-orange-900">Native Address</h3>
-                  <button 
+                  <button
                     type="button"
                     onClick={copyCurrentAddress}
                     className="text-xs bg-orange-200 hover:bg-orange-300 text-orange-800 px-3 py-1 rounded-md font-bold transition-all"
