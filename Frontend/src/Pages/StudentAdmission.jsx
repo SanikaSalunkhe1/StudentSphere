@@ -240,7 +240,6 @@ export default function StudentAdmission() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                   <InfoItem label="Total Fees" value={`₹ ${formData.fees}`} />
-                  <InfoItem label="Fees Status" value={formData.isFeesPaid ? "Paid" : "Unpaid"} />
                   <InfoItem label="Scholarship Applied" value={formData.isScholarshipApplied ? "Yes" : `No - ${formData.scholarshipNotAppliedReason}`} fullWidth />
                 </div>
               </div>
