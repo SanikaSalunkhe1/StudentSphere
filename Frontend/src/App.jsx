@@ -39,9 +39,12 @@ import StudentLayout from "./layouts/StudentLayout";
 // Protected Route Component
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import { Toaster } from "react-hot-toast";
+
 const App = () => {
   return (
     <BrowserRouter>
+      <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
