@@ -4,6 +4,27 @@ const Internship = require("../models/Internship");
 const Achievement = require("../models/Achievement");
 const mongoose = require("mongoose");
 
+const getPlacementYearVariants = (year) => {
+    if (!year || typeof year !== "string") return [];
+    const trimmed = year.trim();
+    if (!trimmed) return [];
+
+    const variants = new Set([trimmed]);
+    const match = trimmed.match(/^(\d{4})-(\d{2}|\d{4})$/);
+
+    if (match) {
+        const startYear = match[1];
+        const endPart = match[2];
+        const endYearShort = endPart.slice(-2);
+        const endYearLong = startYear.slice(0, 2) + endYearShort;
+
+        variants.add(`${startYear}-${endYearShort}`);
+        variants.add(`${startYear}-${endYearLong}`);
+    }
+
+    return Array.from(variants);
+};
+
 const getAccreditationReport = async (req, res) => {
     try {
         const { year, branch } = req.query; // academicYear or passoutYear, branch
@@ -12,7 +33,10 @@ const getAccreditationReport = async (req, res) => {
         if (branch) studentMatch.branch = branch;
         // For general students, 'year' might be matching academicYear
         // However, year can also be used as passoutYear for Placements.
-        if (year) studentMatch.academicYear = year; 
+        if (year) {
+            const academicYearVariants = getPlacementYearVariants(year);
+            studentMatch.academicYear = { $in: academicYearVariants };
+        }
         
         // 1. Get Demographics
         const totalStudents = await Student.countDocuments(studentMatch);
@@ -27,7 +51,8 @@ const getAccreditationReport = async (req, res) => {
 
         let placementMatch = { stuID: { $in: ids } };
         if (year) {
-            placementMatch.passoutYear = year;
+            const placementYearVariants = getPlacementYearVariants(year);
+            placementMatch.passoutYear = { $in: placementYearVariants };
         }
 
         const placementStats = await Placement.aggregate([
