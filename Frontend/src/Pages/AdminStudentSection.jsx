@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 
 import Pagination from "../components/Common/Pagination";
 
-
+import SendNotificationButton from "../components/Common/SendNotificationButton";
 
 
 // Component: Edit Student Modal
@@ -737,7 +737,28 @@ export default function AdminStudentSection() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [emailMap, setEmailMap] = useState({});
 
+  const loadAllStudents = async () => {
+    const res = await studentService.getAllStudents(); // or your existing API
+    return res.data || [];
+  };
+
+  const resolveEmailMap = async (students) => {
+    const map = {};
+
+    students.forEach((student) => {
+      if (student?._id && student?.email) {
+        map[student._id] = student.email;
+      }
+      if (student?.studentID && student?.email) {
+        map[student.studentID] = student.email;
+      }
+    });
+
+    setEmailMap(map);
+    return map;
+  };
   // Applied Filters State (Snapshot for WYSIWYG)
   const [appliedFilters, setAppliedFilters] = useState({});
 
@@ -1136,6 +1157,17 @@ export default function AdminStudentSection() {
                   </div>
                 )}
               </button>
+
+              <SendNotificationButton
+                moduleKey="students"
+                records={students}          // your current student list
+                emailMap={emailMap}
+                loadRecords={loadAllStudents}
+                resolveEmailMap={resolveEmailMap}
+                onSent={(count) => {
+                  toast.success(`Sent to ${count} students`);
+                }}
+              />
 
               {/* Hidden Input for Student IDs Import */}
               <input ref={studentIDsFileInputRef} type="file" accept=".xlsx,.xls" onChange={handleStudentIDsFileChange} className="hidden" />
