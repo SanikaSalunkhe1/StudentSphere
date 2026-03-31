@@ -294,9 +294,9 @@ const updateAchievementSchema = Joi.object({
 const getAchievementsValidation = Joi.object({
   year: Joi.string()
     .trim()
-    .valid("FY", "SY", "TY")
+    .valid("SE", "TE", "BE")
     .optional()
-    .messages({ "any.only": "Year must be one of FY, SY, or TY." }),
+    .messages({ "any.only": "Year must be SE, TE, or BE." }),
 
   division: Joi.string()
     .trim()

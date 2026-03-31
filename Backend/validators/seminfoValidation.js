@@ -95,12 +95,9 @@ const semInfoCreateSchema = Joi.object({
 
   marks: Joi.array()
     .items(markSchema)
-    .min(1)
-    .required()
+    .optional()
     .messages({
-      "array.base": "Marks must be an array.",
-      "array.min": "At least one subject mark is required.",
-      "any.required": "Marks are required."
+      "array.base": "Marks must be an array."
     }),
 
   // journalTaken and examFormFilled added to the create schema.
@@ -165,11 +162,9 @@ const semInfoUpdateSchema = Joi.object({
 
   marks: Joi.array()
     .items(markSchema)
-    .min(1)
     .optional()
     .messages({
-      "array.base": "Marks must be an array.",
-      "array.min": "At least one subject mark is required."
+      "array.base": "Marks must be an array."
     }),
 
   journalTaken: Joi.boolean()
@@ -195,9 +190,14 @@ const semInfoUpdateSchema = Joi.object({
 const getSemInfosValidation = Joi.object({
   year: Joi.string()
     .trim()
-    .valid("FY", "SY", "TY")
+    // FIX: .uppercase() normalises the value before .valid() runs, so query
+    // params like "se", "Se", "te" are all accepted instead of rejected.
+    // Previously a lowercase year would fail validation silently and the filter
+    // would never be applied.
+    .uppercase()
+    .valid("SE", "TE", "BE")
     .optional()
-    .messages({ "any.only": "Year must be one of FY, SY, or TY." }),
+    .messages({ "any.only": "Year must be one of SE, TE, or BE." }),
 
   division: Joi.string()
     .trim()
