@@ -948,19 +948,26 @@ export default function AdminAdmission() {
             Add
           </button>
 
-          <button
-            onClick={handleExport}
-            disabled={exporting || admissions.length === 0}
-            className={`flex-1 sm:flex-none px-6 py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${exporting || admissions.length === 0
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2 flex-1 sm:flex-none">
+            <button
+              onClick={handleExport}
+              disabled={exporting || admissions.length === 0}
+              className={`w-full sm:w-auto px-6 py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${exporting || admissions.length === 0
                 ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200"
                 : "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
-              }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            {exporting ? "Exporting..." : "Export"}
-          </button>
+                }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              {exporting ? "Exporting..." : "Export"}
+            </button>
+            <div className="text-[11px] text-slate-600 leading-tight normal-case tracking-normal font-medium text-left">
+              <span className="font-bold text-slate-800 block mb-0.5">How to export:</span>
+              1. Click <span className="font-bold text-slate-900">Find</span> to apply filters.<br />
+              2. Click <span className="font-bold text-blue-600">Export</span> to download data.
+            </div>
+          </div>
 
           <button
             onClick={handleFind}

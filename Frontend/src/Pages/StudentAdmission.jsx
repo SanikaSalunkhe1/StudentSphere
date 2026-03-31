@@ -11,15 +11,13 @@ export default function StudentAdmission() {
 
   const [formData, setFormData] = useState({
     rollno: "",
-    year: "",
-    div: "",
     course: "",
     admissionDate: "",
     fees: "",
     isFeesPaid: false,
     isScholarshipApplied: false,
     scholarshipNotAppliedReason: "",
-    academicYear: "",
+    status: "",
     isMahadbtFormSubmitted: false,
     mahadbtFilledDate: "",
     mahadbtNotFilledReason: "",
@@ -46,8 +44,6 @@ export default function StudentAdmission() {
 
         setFormData({
           rollno: admissionRecord.rollno || "",
-          year: admissionRecord.year || "",
-          div: admissionRecord.div || "",
           course: admissionRecord.course || "",
           admissionDate: admissionRecord.admissionDate
             ? new Date(admissionRecord.admissionDate).toISOString().split("T")[0]
@@ -56,7 +52,7 @@ export default function StudentAdmission() {
           isFeesPaid: admissionRecord.isFeesPaid || false,
           isScholarshipApplied: admissionRecord.isScholarshipApplied || false,
           scholarshipNotAppliedReason: admissionRecord.scholarshipNotAppliedReason || "",
-          academicYear: admissionRecord.academicYear || "",
+          status: admissionRecord.status || "pending",
           isMahadbtFormSubmitted: admissionRecord.isMahadbtFormSubmitted || false,
           mahadbtFilledDate: admissionRecord.mahadbtFilledDate ? new Date(admissionRecord.mahadbtFilledDate).toISOString().split("T")[0] : "",
           mahadbtNotFilledReason: admissionRecord.mahadbtNotFilledReason || "",
@@ -102,7 +98,7 @@ export default function StudentAdmission() {
       const payload = {
         rollno: String(formData.rollno).trim(),
         // 'div' is required by Joi but ignored by the controller (it uses student.division instead).
-        div: formData.div || "A",
+        div: "A",
         course: formData.course ? formData.course.trim() : "Computer Engineering",
         fees: Number(formData.fees), // Backend requires Joi.number()
         isScholarshipApplied: !!formData.isScholarshipApplied,
@@ -198,16 +194,15 @@ export default function StudentAdmission() {
                 <h2 className="text-xl font-bold text-slate-900">
                   Admission Status
                 </h2>
-                <p className="text-green-600 font-medium mt-1">Confirmed</p>
-                <div className="mt-4 pt-4 border-t border-slate-100 flex justify-center gap-4 text-sm">
+                <p className={`font-medium mt-1 ${formData.status === 'approved' ? 'text-green-600' :
+                  formData.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'
+                  }`}>
+                  {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : "Pending"}
+                </p>
+                <div className="mt-4 pt-4 border-t border-slate-100 flex justify-center text-sm">
                   <div className="text-center">
                     <p className="text-slate-500 font-semibold uppercase text-xs">Roll No</p>
                     <p className="font-bold text-slate-800">{formData.rollno}</p>
-                  </div>
-                  <div className="w-px bg-slate-200"></div>
-                  <div className="text-center">
-                    <p className="text-slate-500 font-semibold uppercase text-xs">Div</p>
-                    <p className="font-bold text-slate-800">{formData.div}</p>
                   </div>
                 </div>
 
@@ -231,9 +226,7 @@ export default function StudentAdmission() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                   <InfoItem label="Course" value={formData.course} fullWidth />
-                  <InfoItem label="Admission Date" value={formData.admissionDate} />
-                  <InfoItem label="Year" value={`${formData.year}`} />
-                  <InfoItem label="Division" value={`Div ${formData.div}`} />
+                  <InfoItem label="Admission Date" value={formData.admissionDate} fullWidth />
                   <InfoItem label="MahaDBT Form" value={formData.isMahadbtFormSubmitted ? `Submitted on ${formData.mahadbtFilledDate}` : `Not Submitted - ${formData.mahadbtNotFilledReason}`} fullWidth />
                   <InfoItem label="Migration Certificate" value={formData.hasMigrationCertificate ? `Expected on ${formData.migrationExpectedDate}` : `Not Available - ${formData.migrationNotAvailableReason}`} fullWidth />
                 </div>
@@ -247,6 +240,7 @@ export default function StudentAdmission() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                   <InfoItem label="Total Fees" value={`₹ ${formData.fees}`} />
+                  <InfoItem label="Fees Status" value={formData.isFeesPaid ? "Paid" : "Unpaid"} />
                   <InfoItem label="Scholarship Applied" value={formData.isScholarshipApplied ? "Yes" : `No - ${formData.scholarshipNotAppliedReason}`} fullWidth />
                 </div>
               </div>
@@ -393,7 +387,19 @@ export default function StudentAdmission() {
               {formData.isMahadbtFormSubmitted ? (
                 <InputField label="Date Filled" name="mahadbtFilledDate" type="date" value={formData.mahadbtFilledDate} onChange={handleChange} required />
               ) : (
-                <InputField label="Reason for Not Filling" name="mahadbtNotFilledReason" value={formData.mahadbtNotFilledReason} onChange={handleChange} required />
+                <SelectField
+                  label="Reason for Not Filling"
+                  name="mahadbtNotFilledReason"
+                  value={formData.mahadbtNotFilledReason}
+                  onChange={handleChange}
+                  required
+                  options={[
+                    "Not Eligible",
+                    "Awaiting Documents",
+                    "Technical Issue in mahadbt website",
+                    "Process in Progress"
+                  ]}
+                />
               )}
             </div>
           </section>
