@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaLinkedin, FaGithub, FaGlobe, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import SEO from "../components/SEO";
 
 // Import Assets
 import dmceBuilding from "../assets/dmce_building.png";
@@ -28,6 +29,8 @@ const Home = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeEvent, setActiveEvent] = useState(0);
+  const [showLoginDropdown, setShowLoginDropdown] = useState(false);
+  const loginRef = useRef(null);
 
   // Scroll Reveal Logic
   useEffect(() => {
@@ -54,8 +57,21 @@ const Home = () => {
   const nextEvent = () => setActiveEvent((prev) => (prev + 1) % events.length);
   const prevEvent = () => setActiveEvent((prev) => (prev - 1 + events.length) % events.length);
 
+  // Handle click outside login dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (loginRef.current && !loginRef.current.contains(event.target)) {
+        setShowLoginDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-500/30 overflow-x-hidden">
+    <>
+      <SEO title="Home - DMCE Computer Engineering" description="Welcome to Datta Meghe College of Engineering, Computer Engineering Department. Innovate, Create, Excel." url="/" />
+      <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-500/30 overflow-x-hidden">
       {/* 
         ========================================
         HEADER SECTION
@@ -76,8 +92,8 @@ const Home = () => {
             <a href="#college" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">College</a>
             <a href="#about" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">About</a>
             <a href="#events" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">Events</a>
-            <button 
-              onClick={() => navigate("/developers")} 
+            <button
+              onClick={() => navigate("/developers")}
               className="text-sm font-bold flex items-center gap-2 text-gray-800 hover:text-[#1D3EA1] transition-colors group"
             >
               <span className="status-dot"></span>
@@ -86,15 +102,29 @@ const Home = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden md:block relative group">
-              <button className="px-6 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect">
+            <div className="hidden md:block relative" ref={loginRef}>
+              <button 
+                onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+                className="px-6 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect"
+              >
                 Login
               </button>
-              <div className="absolute right-0 mt-2 w-48 glass-card rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 border border-gray-200 overflow-hidden">
-                <button onClick={() => navigate("/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors">Student Login</button>
-                <button onClick={() => navigate("/admin/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">Admin Login</button>
-                <button onClick={() => navigate("/division/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">Division Login</button>
-              </div>
+              {showLoginDropdown && (
+                <div className="absolute right-0 mt-2 w-56 glass-card rounded-xl shadow-xl border border-gray-200 overflow-hidden animate-fadeIn z-[60]">
+                  <button onClick={() => { navigate("/login"); setShowLoginDropdown(false); }} className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-blue-50 transition-colors flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    Student Login
+                  </button>
+                  <button onClick={() => { navigate("/admin/login"); setShowLoginDropdown(false); }} className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-blue-50 transition-colors border-t border-gray-100 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    Admin Login
+                  </button>
+                  <button onClick={() => { navigate("/division/login"); setShowLoginDropdown(false); }} className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-blue-50 transition-colors border-t border-gray-100 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Division Incharge Login
+                  </button>
+                </div>
+              )}
             </div>
             <button className="p-2 text-gray-900 md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,8 +141,8 @@ const Home = () => {
             <a href="#college" className="block font-medium" onClick={() => setIsMenuOpen(false)}>COLLEGE</a>
             <a href="#about" className="block font-medium" onClick={() => setIsMenuOpen(false)}>ABOUT</a>
             <a href="#events" className="block font-medium" onClick={() => setIsMenuOpen(false)}>EVENTS</a>
-            <button 
-              className="flex items-center gap-3 font-bold text-gray-900 uppercase pr-4" 
+            <button
+              className="flex items-center gap-3 font-bold text-gray-900 uppercase pr-4"
               onClick={() => { setIsMenuOpen(false); navigate("/developers"); }}
             >
               <span className="status-dot"></span>
@@ -120,9 +150,9 @@ const Home = () => {
             </button>
             <div className="pt-4 space-y-2 border-t border-gray-100">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2">Portals</p>
-              <button onClick={() => navigate("/login")} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors">Student Login</button>
-              <button onClick={() => navigate("/admin/login")} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Admin Login</button>
-              <button onClick={() => navigate("/division/login")} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Division Login</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate("/login"); }} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors">Student Login</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate("/admin/login"); }} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Admin Login</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate("/division/login"); }} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Division Incharge Login</button>
             </div>
           </div>
         )}
@@ -135,8 +165,7 @@ const Home = () => {
       */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-20">
         <div className="absolute inset-0 z-0 animate-hero-fade">
-          <img src={dmceBuilding} alt="DMCE Building" className="w-full h-full object-cover opacity-30 scale-105" />
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white"></div>
+          <img src={dmceBuilding} alt="DMCE Building" className="w-full h-full object-cover opacity-70 scale-105" />
         </div>
 
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
@@ -150,8 +179,8 @@ const Home = () => {
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-black mb-8 leading-[0.9] text-[#182137] animate-hero-slide animation-delay-100">
               INNOVATE.<br />CREATE.<br />EXCEL.
             </h1>
-            <p className="text-base md:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed animate-hero-slide animation-delay-200">
-              The Department of Computer Engineering at <span className="text-[#1D3EA1] font-bold">DMCE</span> is where ambition meets opportunity.
+            <p className="text-base md:text-xl text-slate-800 font-semibold mb-12 max-w-2xl mx-auto leading-relaxed animate-hero-slide animation-delay-200 bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl shadow-sm ring-1 ring-white/50 inline-block">
+              The Department of Computer Engineering at <span className="text-[#1D3EA1] font-black">DMCE</span> is where ambition meets opportunity.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 animate-hero-slide animation-delay-300">
               <a
@@ -343,6 +372,7 @@ const Home = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 
