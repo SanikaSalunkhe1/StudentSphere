@@ -49,6 +49,19 @@ const createActivity = async (req, res) => {
       ? req.body.studentId.trim()
       : req.body.studentId;
 
+    // Parse date field if it comes as stringified JSON from FormData
+    if (req.body.date && typeof req.body.date === "string") {
+      try {
+        req.body.date = JSON.parse(req.body.date);
+      } catch (parseErr) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date format",
+          details: "Date field must be a valid JSON object with 'from' and 'to' properties"
+        });
+      }
+    }
+
     /* Joi Validation */
     const { error, value } = activityCreateSchema.validate(req.body, {
       abortEarly: false,
@@ -383,6 +396,19 @@ const updateActivity = async (req, res) => {
   let dbSaved = false;
 
   try {
+    // Parse date field if it comes as stringified JSON from FormData
+    if (req.body.date && typeof req.body.date === "string") {
+      try {
+        req.body.date = JSON.parse(req.body.date);
+      } catch (parseErr) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date format",
+          details: "Date field must be a valid JSON object with 'from' and 'to' properties"
+        });
+      }
+    }
+
     const { error, value } = activityUpdateSchema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
