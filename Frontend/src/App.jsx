@@ -21,7 +21,6 @@ import AdminSemesterInfo from "./Pages/AdminSemesterInfo";
 import AdminDivisionIncharge from "./Pages/AdminDivisionIncharge";
 import MeetDevelopers from "./Pages/MeetDevelopers";
 import AccreditationReports from "./Pages/AccreditationReports";
-import AdminHigherStudies from "./Pages/AdminHigherStudies";
 
 // Student Pages
 import StudentActivity from "./Pages/StudentActivity";
