@@ -11,7 +11,6 @@ const menuItems = [
   { name: "Achievements", path: "/admin/achievements" },
   { name: "Internships", path: "/admin/internships" },
   { name: "Placements", path: "/admin/placements" },
-  { name: "Higher Studies", path: "/admin/higher-studies" },
   { name: "Semester Info", path: "/admin/semester-info" },
   { name: "Reports", path: "/admin/reports" },
 ];
