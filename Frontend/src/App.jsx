@@ -21,6 +21,7 @@ import AdminSemesterInfo from "./Pages/AdminSemesterInfo";
 import AdminDivisionIncharge from "./Pages/AdminDivisionIncharge";
 import MeetDevelopers from "./Pages/MeetDevelopers";
 import AccreditationReports from "./Pages/AccreditationReports";
+import AdminHigherStudies from "./Pages/AdminHigherStudies";
 
 // Student Pages
 import StudentActivity from "./Pages/StudentActivity";
@@ -79,6 +80,7 @@ const App = () => {
           <Route path="achievements" element={<AdminAchievements />} />
           <Route path="internships" element={<AdminInternship />} />
           <Route path="placements" element={<AdminPlacement />} />
+          <Route path="higher-studies" element={<AdminHigherStudies />} />
           <Route path="reports" element={<AccreditationReports />} />
           <Route path="semester-info" element={<AdminSemesterInfo />} />
           <Route path="division-incharges" element={<AdminDivisionIncharge />} />
