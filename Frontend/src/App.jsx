@@ -80,7 +80,6 @@ const App = () => {
           <Route path="achievements" element={<AdminAchievements />} />
           <Route path="internships" element={<AdminInternship />} />
           <Route path="placements" element={<AdminPlacement />} />
-          <Route path="higher-studies" element={<AdminHigherStudies />} />
           <Route path="reports" element={<AccreditationReports />} />
           <Route path="semester-info" element={<AdminSemesterInfo />} />
           <Route path="division-incharges" element={<AdminDivisionIncharge />} />

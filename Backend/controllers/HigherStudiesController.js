@@ -374,6 +374,7 @@ const getHigherStudies = async (req, res) => {
             studentName: "$student.name",
             studentYear: "$student.year",
             academicYear: "$student.academicYear",
+            email: "$student.email",
             examName: 1,
             score: 1,
             marksheet: 1,

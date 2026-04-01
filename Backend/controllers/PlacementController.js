@@ -418,6 +418,7 @@ const getPlacements = async (req, res) => {
 			stuID:          "$student._id",
 			studentName:    "$student.name",
 			studentYear:    "$student.year",
+			email: "$student.email",
 		};
 
 		// Export branch
